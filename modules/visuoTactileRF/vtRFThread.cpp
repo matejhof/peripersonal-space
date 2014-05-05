@@ -62,7 +62,7 @@ vtRFThread::vtRFThread(int _rate, const string &_name, const string &_robot, int
         path = rf->getHomeContextPath().c_str();
         path = path+"/";
         taxelsFile = rf->check("taxelsFile", Value("taxels_2D.ini")).asString().c_str();
-        printMessage(0,"Storing file set to: %s\n", (path+taxelsFile).c_str());
+        printMessage(0,"Storing file seet to: %s\n", (path+taxelsFile).c_str());
 }
 
 bool vtRFThread::threadInit()
