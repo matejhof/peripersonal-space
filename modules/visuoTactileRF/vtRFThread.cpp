@@ -62,7 +62,7 @@ vtRFThread::vtRFThread(int _rate, const string &_name, const string &_robot, int
         path = rf->getHomeContextPath().c_str();
         path = path+"/";
         taxelsFile = rf->check("taxelsFile", Value("taxels_2D.ini")).asString().c_str();
-        printMessage(0,"Storing file seet to: %s\n", (path+taxelsFile).c_str());
+        printMessage(0,"Storing file set to: %s\n", (path+taxelsFile).c_str());
 }
 
 bool vtRFThread::threadInit()
@@ -79,7 +79,7 @@ bool vtRFThread::threadInit()
     skinGuiPortHandR.open(("/"+name+"/skinGuiHandR:o").c_str());
     skinPortIn          -> open(("/"+name+"/skin_events:i").c_str());
     skinPortOut.open(("/"+name+"/skin_events:o").c_str());
-    // dataDumperPortOut.open(("/"+name+"/dataDumper:o").c_str());
+    dataDumperPortOut.open(("/"+name+"/dataDumper:o").c_str());
 
     /**
     * I know that I should remove this but it's harmless (and I'm overly lazy)
@@ -254,7 +254,7 @@ bool vtRFThread::threadInit()
 
 void vtRFThread::run()
 {
-   incomingEvents.clear();
+    incomingEvents.clear();
 
     // read from the input ports
     dTBottle = dTPort       -> read(false);
@@ -262,25 +262,26 @@ void vtRFThread::run()
     imageInR = imagePortInR -> read(false);
     imageInL = imagePortInL -> read(false); 
     iCub::skinDynLib::skinContactList *skinContacts  = skinPortIn -> read(false);
-    dumpedVector.resize(3,0.0);
 
-    // process the port coming from the doubleTouch (for visualization)
-    // if (dTBottle != NULL)
-    // {
-    //     H[0].taxel[0].Pos = matrixFromBottle(*dTBottle,4,4,4).subcol(0,3,3);
-    //     H[1].taxel[0].Pos = matrixFromBottle(*dTBottle,20,4,4).subcol(0,3,3);
+    dumpedVector.resize(0,0.0);
 
-    //     if (currentTask == "R2L")
-    //     {
-    //         H[0].taxel[0].WRFPos=locateTaxel(H[0].taxel[0].Pos,"left_forearm");
-    //         H[1].taxel[0].WRFPos=locateTaxel(H[1].taxel[0].Pos,"right_hand");
-    //     }
-    //     else if (currentTask == "L2R")
-    //     {
-    //         H[0].taxel[0].WRFPos=locateTaxel(H[0].taxel[0].Pos,"right_forearm");
-    //         H[1].taxel[0].WRFPos=locateTaxel(H[1].taxel[0].Pos,"left_hand");
-    //     }
-    // }
+    // Process the port coming from the doubleTouch (for visualization)
+        // if (dTBottle != NULL)
+        // {
+        //     H[0].taxel[0].Pos = matrixFromBottle(*dTBottle,4,4,4).subcol(0,3,3);
+        //     H[1].taxel[0].Pos = matrixFromBottle(*dTBottle,20,4,4).subcol(0,3,3);
+
+        //     if (currentTask == "R2L")
+        //     {
+        //         H[0].taxel[0].WRFPos=locateTaxel(H[0].taxel[0].Pos,"left_forearm");
+        //         H[1].taxel[0].WRFPos=locateTaxel(H[1].taxel[0].Pos,"right_hand");
+        //     }
+        //     else if (currentTask == "L2R")
+        //     {
+        //         H[0].taxel[0].WRFPos=locateTaxel(H[0].taxel[0].Pos,"right_forearm");
+        //         H[1].taxel[0].WRFPos=locateTaxel(H[1].taxel[0].Pos,"left_hand");
+        //     }
+        // }
 
     // project taxels in World Reference Frame
     for (size_t i = 0; i < iCubSkin.size(); i++)
@@ -318,8 +319,8 @@ void vtRFThread::run()
             printMessage(4,"I'm bufferizing! Size %i\n",eventsBuffer.size());
         }
 
-        // limit the size of the buffer to 100, i.e. 5 seconds of acquisition
-        if (eventsBuffer.size() >= 100)
+        // limit the size of the buffer to 50, i.e. 5 seconds of acquisition
+        if (eventsBuffer.size() >= 50)
         {
             eventsBuffer.erase(eventsBuffer.begin());
             printMessage(1,"Too many samples: removing the older element from the buffer..\n");
@@ -341,13 +342,15 @@ void vtRFThread::run()
                 else
                 {
                     printMessage(0,"No Learning has been put in place.\n");
-                    dumpedVector.push_back(0);
+                    dumpedVector.push_back(0.0);
                 }
                 eventsBuffer.clear();
             }
+            else
+                dumpedVector.push_back(0.0);
         }
         else
-            dumpedVector.push_back(0);
+            dumpedVector.push_back(0.0);
     }
     // if there's no input for more than 2 seconds, clear the buffer
     else if (yarp::os::Time::now() - timeNow > 2)
@@ -356,37 +359,37 @@ void vtRFThread::run()
         eventsBuffer.clear();
         timeNow = yarp::os::Time::now();
         printMessage(2,"No significant event in the last 2 seconds. Erasing the buffer.. \n");
+        dumpedVector.push_back(2.0);
     }
+    else
+        dumpedVector.push_back(0.0);
     
     // Superimpose the taxels onto the right eye
     if (imageInR!=NULL)
         drawTaxels("rightEye");
-    else
-        printMessage(5,"No imageInR!\n");
 
     // Superimpose the taxels onto the left eye
     if (imageInL!=NULL)
         drawTaxels("leftEye");
-    else
-        printMessage(5,"No imageInL!\n");
     
     if (incomingEvents.size()>0)
     {
         projectIncomingEvent();     // project event onto the taxels' RF
         computeResponse();          // compute the response of each taxel
     }
-//For testing 
-//     // project taxels in World Reference Frame
-//       for (size_t i = 0; i < iCubSkin.size(); i++)
-//       {
-//          for (size_t j = 0; j < iCubSkin[i].taxel.size(); j++)
-//          {
-//                iCubSkin[i].taxel[j].Resp=150; //testing
-//          }
-//     } 
  
     sendContactsToSkinGui();        // self explicative
     manageSkinEvents();
+
+    // manage the dumped port
+    if (dumpedVector.size()>0)
+    {
+        Bottle bd;
+        bd.clear();
+        
+        vectorIntoBottle(dumpedVector,bd);
+        dataDumperPortOut.write(bd);
+    }
 }
 
 void vtRFThread::manageSkinEvents()
@@ -419,16 +422,6 @@ void vtRFThread::manageSkinEvents()
                 else
                     taxelsIDs.clear();
             }
-        }
-
-        // manage the dumped port
-        if (dumpedVector.size()>0)
-        {
-            Bottle bd;
-            bd.clear();
-            
-            vectorIntoBottle(dumpedVector,bd);
-            dataDumperPortOut.write(bd);
         }
     }
 
@@ -465,8 +458,6 @@ void vtRFThread::manageSkinEvents()
         vectorIntoBottle(normalDir,b);
         skinPortOut.write(b);     // send something anyway (if there is no contact the bottle is empty)
     }
-
-
 }
 
 void vtRFThread::sendContactsToSkinGui()
@@ -728,8 +719,8 @@ bool vtRFThread::trainTaxels(const std::vector<unsigned int> IDv, const int IDx)
                     IncomingEvent4Taxel projection = projectIntoTaxelRF(iCubSkin[IDx].taxel[j].RF,T_a,eventsBuffer[k]);
                     printMessage(3,"Training Taxels: skinPart %d ID %i k %i NORM %g TTC %g\n",IDx,iCubSkin[IDx].taxel[j].ID,k,projection.NRM,projection.TTC);
                     iCubSkin[IDx].taxel[j].addSample(projection);
-                    dumpedVector.push_back(1);
                 }
+                dumpedVector.push_back(1.0); printf("asdfoija %s\n", dumpedVector.toString().c_str());
             }
             else
             {
@@ -738,60 +729,11 @@ bool vtRFThread::trainTaxels(const std::vector<unsigned int> IDv, const int IDx)
                     IncomingEvent4Taxel projection = projectIntoTaxelRF(iCubSkin[IDx].taxel[j].RF,T_a,eventsBuffer[k]);
                     printMessage(3,"Remove Taxels: skinPart %d ID %i k %i NORM %g TTC %g\n",IDx,iCubSkin[IDx].taxel[j].ID,k,projection.NRM,projection.TTC);
                     iCubSkin[IDx].taxel[j].removeSample(projection);
-                    dumpedVector.push_back(-1);
                 }
+                dumpedVector.push_back(-1.0); printf("asdfoija %s\n", dumpedVector.toString().c_str());
             }
         }
     }
-
-    // for (size_t j = 0; j < iCubSkin[IDx].taxel.size(); j++)
-    // {
-    //     for (size_t k = 0; k < eventsBuffer.size(); k++)
-    //     {
-    //         printf("before %i %i\t",j,k);
-    //         IncomingEvent4Taxel projection = projectIntoTaxelRF(iCubSkin[IDx].taxel[j].RF,T_a,eventsBuffer[k]);
-    //         printf("after\t");
-
-    //         bool flag = false;
-    //         for (size_t w = 0; w < v.size(); w++)
-    //         {
-    //            //these nested for-loops can be made more efficient
-    //             if (iCubSkin[IDx].taxel[j].ID == v[w])
-    //             {
-    //                 flag = true;
-    //             }
-    //         }
-
-    //         if (flag)
-    //         {
-
-    //         }
-    //         else
-    //         {
-    //             printMessage(7,"Removing Taxels: ID %i k %i NORM %g TTC %g\n",iCubSkin[IDx].taxel[j].ID,k,projection.NRM,projection.TTC);
-    //             iCubSkin[IDx].taxel[j].removeSample(projection);
-    //         }
-
-    //         // if (flag)
-    //         // {
-    //         //     printMessage(2,"Training Taxels: ID %i k %i norm(pos) %g eventsBuffer(k) %s\n",iCubSkin[IDx].taxel[j].ID,k,norm(projection.Pos),eventsBuffer[k].Pos.toString().c_str());
-    //         //     iCubSkin[IDx].taxel[j].pwe.addSample(norm(projection.Pos));
-    //         // }
-    //         // // a negative sample is added only if
-    //         // // 1. the z is positive
-    //         // // 2. the x and the y are between -75% and +75% of the RF's extension (i.e. 15cm)
-    //         // else if (!flag && projection.Pos[2]>=0 && 
-    //         //           projection.Pos[0] >= - iCubSkin[IDx].taxel[j].pwe.getExt() * 75 /100 &&
-    //         //           projection.Pos[0] <=   iCubSkin[IDx].taxel[j].pwe.getExt() * 75 /100 &&
-    //         //           projection.Pos[1] >= - iCubSkin[IDx].taxel[j].pwe.getExt() * 75 /100 &&
-    //         //           projection.Pos[1] <=   iCubSkin[IDx].taxel[j].pwe.getExt() * 75 /100 )
-    //         // {
-    //         //     iCubSkin[IDx].taxel[j].pwe.removeSample(norm(projection.Pos));
-    //         // }
-    //         printf("end\n");
-    //     }
-    //     printf("qqqqasdfoijasdio\n");
-    // }
 
     return true;
 }
@@ -828,8 +770,11 @@ bool vtRFThread::projectIncomingEvent()
         {
             iCubSkin[i].taxel[j].Evnt=projectIntoTaxelRF(iCubSkin[i].taxel[j].RF,T_a,
                                                          incomingEvents[incomingEvents.size()-1]);
-            dumpedVector=iCubSkin[i].taxel[j].Evnt.Pos;
 
+            // There's a reason behind this choice
+            dumpedVector.push_back(iCubSkin[i].taxel[j].Evnt.Pos[0]);
+            dumpedVector.push_back(iCubSkin[i].taxel[j].Evnt.Pos[1]);
+            dumpedVector.push_back(iCubSkin[i].taxel[j].Evnt.Pos[2]);
 
             // if (j==100)
             // {
@@ -881,7 +826,7 @@ bool vtRFThread::computeX(IncomingEvent4Taxel &ie)
     ie.NRM = sgn * norm(ie.Pos);
     // printf("ie.Vel %g\n", norm(ie.Vel));
 
-    if (norm(ie.Vel) < 0.4)
+    if (norm(ie.Vel) < 0.38 && norm(ie.Vel) > 0.34)
     {
         ie.TTC = 10000.0;
     }
