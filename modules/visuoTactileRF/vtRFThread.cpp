@@ -319,8 +319,8 @@ void vtRFThread::run()
             printMessage(4,"I'm bufferizing! Size %i\n",eventsBuffer.size());
         }
 
-        // limit the size of the buffer to 50, i.e. 5 seconds of acquisition
-        if (eventsBuffer.size() >= 50)
+        // limit the size of the buffer to 30, i.e. 3 seconds of acquisition
+        if (eventsBuffer.size() >= 30)
         {
             eventsBuffer.erase(eventsBuffer.begin());
             printMessage(1,"Too many samples: removing the older element from the buffer..\n");
@@ -1146,9 +1146,13 @@ bool vtRFThread::setTaxelPosesFromFile(const string filePath, skinPart &sP)
         {
             // the taxels at the centers of respective triangles [note that i == taxelID == (line in the .txt file +1)]
             // e.g. first triangle of upper arm is at lines 1-12, center at line 4, thus i=2 
-            if((i==3) || (i==15)  || (i==27)  || (i==39)  || (i==51)  || (i==63)  || (i==75)  || (i==87)  || 
-              (i==99) || (i==111) || (i==123) || (i==135) || (i==147) || (i==159) || (i==171) || (i==183) || //upper patch ends here 
-              (i==207)|| (i==255) || (i==291) || (i==303) || (i==315) || (i==339) || (i==351)) //lower patch
+            // if((i==3) || (i==15)  || (i==27)  || (i==39)  || (i==51)  || (i==63)  || (i==75)  || (i==87)  || 
+            //   (i==99) || (i==111) || (i==123) || (i==135) || (i==147) || (i==159) || (i==171) || (i==183) || //upper patch ends here 
+            //   (i==207)|| (i==255) || (i==291) || (i==303) || (i==315) || (i==339) || (i==351)) //lower patch
+
+            // if((i==3) || (i==39)  || (i==207)|| (i==255) || (i==291))
+            // if((i==3) || (i==15)  || (i==27)|| (i==183))
+            if((i==135) || (i==147)  || (i==159)|| (i==171))
             {
                 sP.size++;
                 sP.taxel.push_back(Taxel(taxelPos,taxelNorm,i));
@@ -1173,7 +1177,7 @@ bool vtRFThread::setTaxelPosesFromFile(const string filePath, skinPart &sP)
         }
         else if (sP.name == "right_hand")
         { //right hand has different taxel nr.s than left hand 
-            if((i==101))// || (i==103) || (i==124) || (i==118) || (i==137))  //only one taxel
+            if((i==101) || (i==103) || (i==118) || (i==137)) // || (i==124)) remove one taxel
             {
                 sP.size++;
                 sP.taxel.push_back(Taxel(taxelPos,taxelNorm,i));

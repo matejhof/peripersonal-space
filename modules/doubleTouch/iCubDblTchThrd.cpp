@@ -85,10 +85,10 @@ bool doubleTouchThread::threadInit()
     Network::connect(("/"+name+"/status:o").c_str(),"/visuoTactileRF/input:i");
 
 
-    Property OptGaze;
-    OptGaze.put("device","gazecontrollerclient");
-    OptGaze.put("remote","/iKinGazeCtrl");
-    OptGaze.put("local",("/"+name+"/gaze").c_str());
+    // Property OptGaze;
+    // OptGaze.put("device","gazecontrollerclient");
+    // OptGaze.put("remote","/iKinGazeCtrl");
+    // OptGaze.put("local",("/"+name+"/gaze").c_str());
 
     Property OptR;
     OptR.put("robot",  robot.c_str());
@@ -104,23 +104,23 @@ bool doubleTouchThread::threadInit()
     OptL.put("remote",("/"+robot+"/left_arm").c_str());
     OptL.put("local", ("/"+name +"/left_arm").c_str());
 
-    if ((!ddG.open(OptGaze)) || (!ddG.view(igaze))){
-       printMessage(0,"Error: could not open the Gaze Controller!\n");
-       return false;
-    }
+    // if ((!ddG.open(OptGaze)) || (!ddG.view(igaze))){
+    //    printMessage(0,"Error: could not open the Gaze Controller!\n");
+    //    return false;
+    // }
 
-    igaze -> storeContext(&contextGaze);
-    if (robot == "icubSim")
-    {
-        igaze -> setNeckTrajTime(2.5);
-        igaze -> setEyesTrajTime(1.0);
-    }
-    //else
-    //{
-    //    igaze -> setNeckTrajTime(1.5);
-    //    igaze -> setEyesTrajTime(0.5);
-    //}
-    igaze -> setSaccadesStatus(false);
+    // igaze -> storeContext(&contextGaze);
+    // if (robot == "icubSim")
+    // {
+    //     igaze -> setNeckTrajTime(1.5);
+    //     igaze -> setEyesTrajTime(1.0);
+    // }
+    // //else
+    // //{
+    // //    igaze -> setNeckTrajTime(1.5);
+    // //    igaze -> setEyesTrajTime(0.5);
+    // //}
+    // igaze -> setSaccadesStatus(false);
 
     if (!ddR.open(OptR))
     {
@@ -235,7 +235,7 @@ void doubleTouchThread::run()
     }
     outPort->write();
 
-    handleGaze();
+    // handleGaze();
 
     if (checkMotionDone())
     {
@@ -287,9 +287,11 @@ void doubleTouchThread::run()
                     }
                     else if (robot == "icub")
                     {
-                        vels.resize(7,14.0);
+                        vels.resize(7,16.0);
                         for (int i=0; i<7; i++)
                             iposL->setRefSpeed(i,vels[i]);
+                        for (int i=0; i<7; i++)
+                            iposR->setRefSpeed(i,vels[i]);
                     }
                 }
                 if ((type == "L2R") || (type == "both"))
@@ -361,7 +363,9 @@ void doubleTouchThread::run()
                 bool flag;
                 if (record == 0)
                 {
-                    igaze->checkMotionDone(&flag);
+                    // igaze->checkMotionDone(&flag);
+                    Time::delay(2);
+                    flag=1;
                     if (flag == 1)
                     {
                         testAchievement();
@@ -527,34 +531,34 @@ void doubleTouchThread::delay(int sec)
     for (int i = 0; i < sec*4; i++)
     {
         Time::delay(0.25);
-        if (!record)
-            handleGaze();
+        // if (!record)
+        //     handleGaze();
     }
 }
 
 bool doubleTouchThread::handleGaze()
 {
-    if (step == 0 || step == 1 || step == 8) {
-      Vector ang(3,0.0);
-      igaze -> lookAtAbsAngles(ang);
-      return true;
-    }
-    else if (record && step == 3)
-    {
-        cntctPosWRF = findFinalConfiguration();
-        printMessage(1,"cntctPosWRF: %s\n", cntctPosWRF.toString().c_str());
-        igaze -> lookAtFixationPoint(cntctPosWRF);
-        if (robot == "icub")
-            igaze -> waitMotionDone();
-        return true;
-    }
-    else if (record == 0)
-    {
-        cntctPosWRF = locateContact(cntctSkin);
-        igaze -> lookAtFixationPoint(cntctPosWRF);
-        return true;
-    }
-    return false;
+    // if (step == 0 || step == 1 || step == 8) {
+    //   Vector ang(3,0.0);
+    //   igaze -> lookAtAbsAngles(ang);
+    //   return true;
+    // }
+    // else if (record && step == 3)
+    // {
+    //     cntctPosWRF = findFinalConfiguration();
+    //     printMessage(1,"cntctPosWRF: %s\n", cntctPosWRF.toString().c_str());
+    //     igaze -> lookAtFixationPoint(cntctPosWRF);
+    //     if (robot == "icub")
+    //         igaze -> waitMotionDone();
+    //     return true;
+    // }
+    // else if (record == 0)
+    // {
+    //     cntctPosWRF = locateContact(cntctSkin);
+    //     igaze -> lookAtFixationPoint(cntctPosWRF);
+    //     return true;
+    // }
+    // return false;
 }
 
 Vector doubleTouchThread::findFinalConfiguration()
@@ -855,9 +859,9 @@ void doubleTouchThread::threadRelease()
         ddR.close();
         ddL.close();
         Vector ang(3,0.0);
-        igaze -> lookAtAbsAngles(ang);
-        igaze -> restoreContext(contextGaze);
-        igaze -> stopControl();
+        // igaze -> lookAtAbsAngles(ang);
+        // igaze -> restoreContext(contextGaze);
+        // igaze -> stopControl();
         ddG.close();
 
     printMessage(0,"Closing solver..\n");

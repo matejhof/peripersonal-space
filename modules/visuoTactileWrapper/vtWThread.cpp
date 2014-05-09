@@ -209,7 +209,7 @@ void vtWThread::run()
                     AWPolyElement el(pf3dTrackerPos,Time::now());
                     pf3dTrackerVelEstimate=linEst_pf3dTracker->estimate(el);
                     
-                    events.push_back(IncomingEvent(pf3dTrackerPos,pf3dTrackerVelEstimate,0.05,"pf3dTracker"));
+                    events.push_back(IncomingEvent(pf3dTrackerPos,pf3dTrackerVelEstimate,0.03,"pf3dTracker"));
                     isTarget=true;
                 }
             }
@@ -224,7 +224,8 @@ void vtWThread::run()
             if (doubleTouchBottle->get(3).asString() != "")
             {
                 Matrix T = eye(4);
-                Vector fingertipPos(4,0.0), fingertipPosWRF(4,0.0);
+                Vector fingertipPos(4,0.0);
+                doubleTouchPos.resize(4,0.0);
                 
                 currentTask = doubleTouchBottle->get(3).asString();
                 doubleTouchStep = doubleTouchBottle->get(0).asInt();
@@ -239,10 +240,10 @@ void vtWThread::run()
                         Vector qR=encsR->subVector(0,6);
                         armR -> setAng(qR*CTRL_DEG2RAD);                        
                         T = armR -> getH(3+6, true);  // torso + up to wrist
-                        fingertipPosWRF = T * fingertipPos; 
+                        doubleTouchPos = T * fingertipPos; 
                         //optionally, get the finger encoders and get the fingertip position using iKin Finger based on the current joint values 
                         //http://wiki.icub.org/iCub/main/dox/html/icub_cartesian_interface.html#sec_cart_tipframe
-                        fingertipPosWRF.pop_back(); //take out the last dummy value from homogenous form
+                        doubleTouchPos.pop_back(); //take out the last dummy value from homogenous form
                     }
                     else if(currentTask=="L2R") //left to right -> the left index finger will be generating events
                     {   
@@ -250,19 +251,19 @@ void vtWThread::run()
                         Vector qL=encsL->subVector(0,6);
                         armL -> setAng(qL*CTRL_DEG2RAD);                        
                         T = armL -> getH(3+6, true);  // torso + up to wrist
-                        fingertipPosWRF = T * fingertipPos; 
+                        doubleTouchPos = T * fingertipPos; 
                         //optionally, get the finger encoders and get the fingertip position using iKin Finger based on the current joint values 
                         //http://wiki.icub.org/iCub/main/dox/html/icub_cartesian_interface.html#sec_cart_tipframe
-                        fingertipPosWRF.pop_back(); //take out the last dummy value from homogenous form
+                        doubleTouchPos.pop_back(); //take out the last dummy value from homogenous form
                     } 
                     else
                     {
                         printMessage(0,"\nERROR: vtWThread::run(): Unknown task received from double touch thread!\n");
                     }
                                    
-                    AWPolyElement el2(fingertipPosWRF,Time::now());
+                    AWPolyElement el2(doubleTouchPos,Time::now());
                     doubleTouchVelEstimate=linEst_doubleTouch->estimate(el2);
-                    events.push_back(IncomingEvent(fingertipPosWRF,doubleTouchVelEstimate,-1.0,"doubleTouch"));
+                    events.push_back(IncomingEvent(doubleTouchPos,doubleTouchVelEstimate,-1.0,"doubleTouch"));
                     isTarget=true;
                 }
             }
@@ -272,6 +273,7 @@ void vtWThread::run()
     if (isTarget)
     {
         igaze -> lookAtFixationPoint(pf3dTrackerPos);
+        // igaze -> lookAtFixationPoint(doubleTouchPos);
 
         Bottle& eventsBottle = eventsPort.prepare();
         eventsBottle.clear();

@@ -253,11 +253,10 @@ public:
                     Bottle *taxelPosFiles = skinEventsConf.find("taxelPositionFiles").asList();
 
                     for(int i=0;i<partNum;i++)     // all of the skinparts
-                    // for(int i=1;i<2;i++)           // only left forearm
-                    // for(int i=0;i<1;i++)           // only left hand
-                    // for(int i=1;i<partNum;i++)     // everything but the left hand
                     {
-                        if (i==2)                   // only right hand
+                        // if (i==2)                   // only right hand
+                        // if (i==3)                      // only right forearm
+                        if (i==1)                         // only left forearm
                         {
                             string taxelPosFile = taxelPosFiles->get(i).asString().c_str();
                             string filePath(skinRF.findFile(taxelPosFile.c_str()));

@@ -4,7 +4,7 @@
 
 find_package(OpenCV REQUIRED)
 
-#add_subdirectory(doubleTouch)
+add_subdirectory(doubleTouch)
 add_subdirectory(visuoTactileRF)
 add_subdirectory(visuoTactileWrapper)
 add_subdirectory(demoAvoidance)
