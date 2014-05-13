@@ -342,15 +342,28 @@ void vtRFThread::run()
                 else
                 {
                     printMessage(0,"No Learning has been put in place.\n");
-                    dumpedVector.push_back(0.0);
+                    for (size_t j = 0; j < iCubSkin[0].taxel.size(); j++)
+                    {
+                        dumpedVector.push_back(0.0);
+                    }
                 }
                 eventsBuffer.clear();
             }
             else
-                dumpedVector.push_back(0.0);
+            {
+                for (size_t j = 0; j < iCubSkin[0].taxel.size(); j++)
+                {
+                    dumpedVector.push_back(0.0);
+                }
+            }
         }
         else
-            dumpedVector.push_back(0.0);
+        {
+            for (size_t j = 0; j < iCubSkin[0].taxel.size(); j++)
+            {
+                dumpedVector.push_back(0.0);
+            }
+        }
     }
     // if there's no input for more than 2 seconds, clear the buffer
     else if (yarp::os::Time::now() - timeNow > 2)
@@ -362,7 +375,12 @@ void vtRFThread::run()
         dumpedVector.push_back(2.0);
     }
     else
-        dumpedVector.push_back(0.0);
+    {
+        for (size_t j = 0; j < iCubSkin[0].taxel.size(); j++)
+        {
+            dumpedVector.push_back(0.0);
+        }
+    }
     
     // Superimpose the taxels onto the right eye
     if (imageInR!=NULL)
