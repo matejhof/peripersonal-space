@@ -359,7 +359,7 @@ void vtRFThread::run()
         eventsBuffer.clear();
         timeNow = yarp::os::Time::now();
         printMessage(2,"No significant event in the last 2 seconds. Erasing the buffer.. \n");
-        dumpedVector.push_back(2.0);
+        dumpedVector.push_back(-2.0);
     }
     else
         dumpedVector.push_back(0.0);
@@ -708,6 +708,7 @@ bool vtRFThread::trainTaxels(const std::vector<unsigned int> IDv, const int IDx)
         return false;
     }
 
+    double touchedTaxel=-1.0;
     for (size_t j = 0; j < iCubSkin[IDx].taxel.size(); j++)
     {
         bool itHasBeenTouched = false;
@@ -717,6 +718,7 @@ bool vtRFThread::trainTaxels(const std::vector<unsigned int> IDv, const int IDx)
             if (iCubSkin[IDx].taxel[j].ID == v[w])
             {
                 itHasBeenTouched = true;
+                touchedTaxel = iCubSkin[IDx].taxel[j].ID;
             }
         }
 
@@ -734,16 +736,10 @@ bool vtRFThread::trainTaxels(const std::vector<unsigned int> IDv, const int IDx)
                 iCubSkin[IDx].taxel[j].removeSample(projection);
             }
         }
-
-        if (itHasBeenTouched == true)
-        {
-            dumpedVector.push_back(1.0); printf("asdfoija %s\n", dumpedVector.toString().c_str());
-        }
-        else
-        {
-            dumpedVector.push_back(-1.0); printf("asdfoija %s\n", dumpedVector.toString().c_str());
-        }
     }
+
+    dumpedVector.push_back(touchedTaxel);
+    printf("dumpedVector: %s\n", dumpedVector.toString().c_str());
 
     return true;
 }
