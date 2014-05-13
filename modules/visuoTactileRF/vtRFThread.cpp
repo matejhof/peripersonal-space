@@ -677,7 +677,7 @@ bool vtRFThread::save()
 
 bool vtRFThread::trainTaxels(const std::vector<unsigned int> IDv, const int IDx)
 {
-    std::vector<unsigned int> v; 					//vector of taxel IDs activated on the skin
+    std::vector<unsigned int> v;                    //vector of taxel IDs activated on the skin
     getRepresentativeTaxelsToTrain(IDv, IDx, v);
     //otherwise, do simply:  //v = IDv;
 
@@ -708,30 +708,40 @@ bool vtRFThread::trainTaxels(const std::vector<unsigned int> IDv, const int IDx)
         return false;
     }
 
-    for (int w = 0; w < v.size(); w++)
+    for (size_t j = 0; j < iCubSkin[IDx].taxel.size(); j++)
     {
-        for (size_t j = 0; j < iCubSkin[IDx].taxel.size(); j++)
+        bool itHasBeenTouched = false;
+
+        for (int w = 0; w < v.size(); w++)
         {
             if (iCubSkin[IDx].taxel[j].ID == v[w])
             {
-                for (size_t k = 0; k < eventsBuffer.size(); k++)
-                {
-                    IncomingEvent4Taxel projection = projectIntoTaxelRF(iCubSkin[IDx].taxel[j].RF,T_a,eventsBuffer[k]);
-                    printMessage(3,"Training Taxels: skinPart %d ID %i k %i NORM %g TTC %g\n",IDx,iCubSkin[IDx].taxel[j].ID,k,projection.NRM,projection.TTC);
-                    iCubSkin[IDx].taxel[j].addSample(projection);
-                }
-                dumpedVector.push_back(1.0); printf("asdfoija %s\n", dumpedVector.toString().c_str());
+                itHasBeenTouched = true;
+            }
+        }
+
+        for (size_t k = 0; k < eventsBuffer.size(); k++)
+        {
+            IncomingEvent4Taxel projection = projectIntoTaxelRF(iCubSkin[IDx].taxel[j].RF,T_a,eventsBuffer[k]);
+            printMessage(3,"Training Taxels: skinPart %d ID %i k %i NORM %g TTC %g\n",IDx,iCubSkin[IDx].taxel[j].ID,k,projection.NRM,projection.TTC);
+
+            if (itHasBeenTouched == true)
+            {
+                iCubSkin[IDx].taxel[j].addSample(projection);
             }
             else
             {
-                for (size_t k = 0; k < eventsBuffer.size(); k++)
-                {
-                    IncomingEvent4Taxel projection = projectIntoTaxelRF(iCubSkin[IDx].taxel[j].RF,T_a,eventsBuffer[k]);
-                    printMessage(3,"Remove Taxels: skinPart %d ID %i k %i NORM %g TTC %g\n",IDx,iCubSkin[IDx].taxel[j].ID,k,projection.NRM,projection.TTC);
-                    iCubSkin[IDx].taxel[j].removeSample(projection);
-                }
-                dumpedVector.push_back(-1.0); printf("asdfoija %s\n", dumpedVector.toString().c_str());
+                iCubSkin[IDx].taxel[j].removeSample(projection);
             }
+        }
+
+        if (itHasBeenTouched == true)
+        {
+            dumpedVector.push_back(1.0); printf("asdfoija %s\n", dumpedVector.toString().c_str());
+        }
+        else
+        {
+            dumpedVector.push_back(-1.0); printf("asdfoija %s\n", dumpedVector.toString().c_str());
         }
     }
 

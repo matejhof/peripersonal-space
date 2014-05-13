@@ -254,9 +254,9 @@ public:
 
                     for(int i=0;i<partNum;i++)     // all of the skinparts
                     {
-                        // if (i==2)                   // only right hand
+                        if (i==2)                   // only right hand
                         // if (i==3)                      // only right forearm
-                        if (i==1)                         // only left forearm
+                        // if (i==1)                         // only left forearm
                         {
                             string taxelPosFile = taxelPosFiles->get(i).asString().c_str();
                             string filePath(skinRF.findFile(taxelPosFile.c_str()));
@@ -267,7 +267,6 @@ public:
                             }
                         }
                     }
-                    // filenames.pop_back();           // only left forearm
                 }
             }
             else
