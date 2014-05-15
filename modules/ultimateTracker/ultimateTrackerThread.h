@@ -68,7 +68,7 @@ using namespace iCub::ctrl;
 
 using namespace std;
 
-class vtRFThread: public RateThread
+class ultimateTrackerThread: public RateThread
 {
 protected:
     /***************************************************************************/
@@ -292,7 +292,7 @@ protected:
 
 public:
     // CONSTRUCTOR
-    vtRFThread(int _rate, const string &_name, const string &_robot, int _v,
+    ultimateTrackerThread(int _rate, const string &_name, const string &_robot, int _v,
                const ResourceFinder &_moduleRF, vector<string> _fnames,
                double _hV, const ResourceFinder &_eyeCalibRF);
     // INIT

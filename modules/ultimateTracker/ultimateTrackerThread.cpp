@@ -33,36 +33,10 @@ IncomingEvent eventFromBottle(const Bottle &b)
     return ie;
 };
 
-vtRFThread::vtRFThread(int _rate, const string &_name, const string &_robot, int _v,
-                       const ResourceFinder &_moduleRF, vector<string> _fnames,
-                       double _hV, const ResourceFinder &_eyeCalibRF) :
+vtRFThread::vtRFThread(int _rate, const string &_name, const string &_robot, int _v) :
                        RateThread(_rate), name(_name), robot(_robot), verbosity(_v),
-                       filenames(_fnames)
 {
-    //******************* PORTS ******************
-        imagePortInR  = new BufferedPort<ImageOf<PixelRgb> >;
-        imagePortInL  = new BufferedPort<ImageOf<PixelRgb> >;
-        dTPort        = new BufferedPort<Bottle>;
-        eventsPort    = new BufferedPort<Bottle>;
-        skinPortIn    = new BufferedPort<iCub::skinDynLib::skinContactList>;
 
-    //******************* ARMS, EYEWRAPPERS, WHATEVER ******************
-        armR = new iCubArm("right");
-        armL = new iCubArm("left");
-
-        eWR  = new eyeWrapper("right",_hV,_eyeCalibRF);
-        eWL  = new eyeWrapper("left", _hV,_eyeCalibRF);
-        
-        rf = const_cast<ResourceFinder*>(&_moduleRF);
-
-        eventsFlag   = true;
-        learningFlag = true;
-
-    //******************* PATH ******************
-        path = rf->getHomeContextPath().c_str();
-        path = path+"/";
-        taxelsFile = rf->check("taxelsFile", Value("taxels_2D.ini")).asString().c_str();
-        printMessage(0,"Storing file set to: %s\n", (path+taxelsFile).c_str());
 }
 
 bool vtRFThread::threadInit()

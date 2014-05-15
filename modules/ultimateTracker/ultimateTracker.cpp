@@ -17,18 +17,18 @@
 */
 
 /**
-\defgroup visuoTactileRFModule visuoTactileRFModule
+\defgroup ultimateTrackerModule ultimateTrackerModule
 
 @ingroup periPersonalSpace
 
-A module that handles the visuoTactile Receptive Fields
+THE ultimate tracker. It tracks everything without any hiccup!
 
-Date first release: 23/10/2013
+Date first release: 23/05/2014
 
 CopyPolicy: Released under the terms of the GNU GPL v2.0.
 
 \section intro_sec Description
-This is a module for implementing the VisuoTactile ReceptiveFields on the iCub.
+This is nothing but a tracker. But it's the ultimate one!
 
 \section lib_sec Libraries 
 YARP, ICUB libraries and OPENCV
@@ -42,7 +42,7 @@ YARP, ICUB libraries and OPENCV
 - The name of the .ini file with the configuration parameters.
 
 --name          \e name
-- The name of the module (default visuoTactileRF).
+- The name of the module (default ultimateTracker).
 
 --robot         \e rob
 - The name of the robot (either "icub" or "icub"). Default icub.
@@ -50,15 +50,7 @@ YARP, ICUB libraries and OPENCV
 --rate          \e rate
 - The period used by the thread. Default 100ms.
 
---taxelsFile    \e file
-- The name of the file the receptive fields are gonna be saved in (and loaded from).
-  Default 'taxels2D.ini'.
-
 \section portsc_sec Ports Created
-- <i> /<name>/contacts:i </i> it reads the skinContacts from the skinManager.
-
-- <i> /<name>/records:o </i> it prints out some data about the state of the
-  recording.
 
 \section in_files_sec Input Data Files
 None.
@@ -69,7 +61,7 @@ None.
 \section tested_os_sec Tested OS
 Linux (Ubuntu 12.04, Debian Squeeze, Debian Wheezy).
 
-\author: Alessandro Roncone and Matej Hoffmann
+\author: Alessandro Roncone and Ugo Pattacini
 */ 
 
 #include <yarp/os/all.h>
@@ -82,7 +74,7 @@ Linux (Ubuntu 12.04, Debian Squeeze, Debian Wheezy).
 #include <iostream>
 #include <string> 
 
-#include "vtRFThread.h"
+#include "ultimateTrackerThread.h"
 
 YARP_DECLARE_DEVICES(icubmod)
 
@@ -94,15 +86,15 @@ using namespace yarp::math;
 using namespace std;
 
 /**
-* \ingroup visuoTactileRFModule
+* \ingroup ultimateTrackerModule
 *
-* The module that achieves the visuoTactileRF task.
+* The module that achieves the ultimateTracker task.
 *  
 */
-class visuoTactileRF: public RFModule 
+class ultimateTracker: public RFModule 
 {
 private:
-    vtRFThread *vtRFThrd;
+    ultimateTrackerThread *ultTrckrThrd;
 
     RpcClient             rpcClnt;
     RpcServer             rpcSrvr;
@@ -111,9 +103,9 @@ private:
     int verbosity,rate;
 
 public:
-    visuoTactileRF()
+    ultimateTracker()
     {
-        vtRFThrd    = 0;
+        ultTrckrThrd    = 0;
     }
 
     bool respond(const Bottle &command, Bottle &reply)
@@ -129,7 +121,7 @@ public:
                 case VOCAB4('s','a','v','e'):
                 {
                     int res=Vocab::encode("saved");
-                    if (vtRFThrd -> save())
+                    if (ultTrckrThrd -> save())
                     {
                         reply.addVocab(ack);
                     }
@@ -142,7 +134,7 @@ public:
                 case VOCAB4('l','o','a','d'):
                 {
                     int res=Vocab::encode("loaded");
-                    if (vtRFThrd -> load())
+                    if (ultTrckrThrd -> load())
                     {
                         reply.addVocab(ack);
                     }
@@ -154,19 +146,19 @@ public:
                 }
                 case VOCAB4('r','e','s','e'):
                 {
-                    vtRFThrd -> resetParzenWindows();
+                    ultTrckrThrd -> resetParzenWindows();
                     reply.addVocab(ack);
                     return true;
                 }
                 case VOCAB4('s','t','o','p'):
                 {
-                    vtRFThrd -> stopLearning();
+                    ultTrckrThrd -> stopLearning();
                     reply.addVocab(ack);
                     return true;
                 }
                case VOCAB4('r','e','s','t'):
                 {
-                    vtRFThrd -> restoreLearning();
+                    ultTrckrThrd -> restoreLearning();
                     reply.addVocab(ack);
                     return true;
                 }     
@@ -182,11 +174,11 @@ public:
 
     bool configure(ResourceFinder &rf)
     {
-        name  = "visuoTactileRF";
+        name  = "ultimateTracker";
         robot = "icub";
 
         verbosity  = 0;      // verbosity
-        rate       = 100;    // rate of the vtRFThread
+        rate       = 100;    // rate of the ultimateTrackerThread
 
         //******************************************************
         //********************** CONFIGS ***********************
@@ -213,7 +205,7 @@ public:
             if (rf.check("verbosity"))
             {
                 verbosity = rf.find("verbosity").asInt();
-                cout << "vtRFThread verbosity set to " << verbosity << endl;
+                cout << "ultimateTrackerThread verbosity set to " << verbosity << endl;
             }
             else cout << "Could not find verbosity option in " <<
                          "config file; using "<< verbosity <<" as default\n";
@@ -222,99 +214,22 @@ public:
             if (rf.check("rate"))
             {
                 rate = rf.find("rate").asInt();
-                cout << "vtRFThread rateThread working at " << rate << " ms\n";
+                cout << "ultimateTrackerThread rateThread working at " << rate << " ms\n";
             }
             else cout << "Could not find rate in the config file; using "
                       << rate << " ms as default\n";
 
-        //************* skinTaxels' Resource finder **************
-            ResourceFinder skinRF;
-            skinRF.setVerbose(false);
-            skinRF.setDefaultContext("skinGui");                //overridden by --context parameter
-            skinRF.setDefaultConfigFile("skinManForearms.ini"); //overridden by --from parameter
-            skinRF.configure(0,NULL);
-
-            vector<string> filenames;
-            int partNum=4;
-
-            Bottle &skinEventsConf = skinRF.findGroup("SKIN_EVENTS");
-            if(!skinEventsConf.isNull())
-            {
-                printf("SKIN_EVENTS section found\n");
-
-                if(skinEventsConf.check("skinParts"))
-                {
-                    Bottle* skinPartList = skinEventsConf.find("skinParts").asList();
-                    partNum=skinPartList->size();
-                }
-
-                if(skinEventsConf.check("taxelPositionFiles"))
-                {
-                    Bottle *taxelPosFiles = skinEventsConf.find("taxelPositionFiles").asList();
-
-                    for(int i=0;i<partNum;i++)     // all of the skinparts
-                    {
-                        if (i==2)                   // only right hand
-                        // if (i==3)                      // only right forearm
-                        // if (i==1)                         // only left forearm
-                        {
-                            string taxelPosFile = taxelPosFiles->get(i).asString().c_str();
-                            string filePath(skinRF.findFile(taxelPosFile.c_str()));
-                            if (filePath!="")
-                            {
-                                printf("*** VisuoTactileRF: filePath [%i] %s\n",i,filePath.c_str());
-                                filenames.push_back(filePath);
-                            }
-                        }
-                    }
-                }
-            }
-            else
-            {
-                printf("ERROR! No skin's configuration files found.\n");
-                return 0;
-            }
-
-        //*************** eyes' Resource finder ****************
-            ResourceFinder gazeRF;
-            // gazeRF.setQuiet();
-            gazeRF.setDefaultContext("iKinGazeCtrl");
-            robot=="icub"?gazeRF.setDefaultConfigFile("config.ini"):gazeRF.setDefaultConfigFile("configSim.ini");
-            gazeRF.configure(0,NULL);
-            double head_version=gazeRF.check("headV2")?2.0:1.0;
-
-            ResourceFinder eyeAlignRF;
-
-            if (gazeRF.check("camerasFile"))
-            {
-                eyeAlignRF.setVerbose(false);
-                gazeRF.check("camerasContext")?
-                eyeAlignRF.setDefaultContext(gazeRF.find("camerasContext").asString().c_str()):
-                eyeAlignRF.setDefaultContext(gazeRF.getContext().c_str());
-                eyeAlignRF.setDefaultConfigFile(gazeRF.find("camerasFile").asString().c_str());            
-                eyeAlignRF.configure(0,NULL);
-            }
-
         //******************************************************
         //*********************** THREAD **********************
-            if( filenames.size() > 0 )
+            ultTrckrThrd = new ultimateTrackerThread(rate, name, robot, verbosity);
+            if (!ultTrckrThrd -> start())
             {
-                vtRFThrd = new vtRFThread(rate, name, robot, verbosity, rf,
-                                          filenames, head_version, eyeAlignRF);
-                if (!vtRFThrd -> start())
-                {
-                    delete vtRFThrd;
-                    vtRFThrd = 0;
-                    cout << "\nERROR!!! vtRFThread wasn't instantiated!!\n";
-                    return false;
-                }
-                cout << "VISUO TACTILE RECEPTIVE FIELDS: vtRFThread istantiated...\n";
-            }
-            else {
-                vtRFThrd = 0;
-                cout << "\nERROR!!! vtRFThread wasn't instantiated. No filenames have been given!\n";
+                delete ultTrckrThrd;
+                ultTrckrThrd = 0;
+                cout << "\nERROR!!! ultimateTrackerThread wasn't instantiated!!\n";
                 return false;
             }
+            cout << "ULTIMATE TRACKER: ultimateTrackerThread istantiated...\n";
 
         //******************************************************
         //************************ PORTS ***********************
@@ -327,12 +242,12 @@ public:
 
     bool close()
     {
-        cout << "VISUO TACTILE RECEPTIVE FIELDS: Stopping thread.." << endl;
-        if (vtRFThrd)
+        cout << "ULTIMATE TRACKER: Stopping thread.." << endl;
+        if (ultTrckrThrd)
         {
-            vtRFThrd->stop();
-            delete vtRFThrd;
-            vtRFThrd=0;
+            ultTrckrThrd->stop();
+            delete ultTrckrThrd;
+            ultTrckrThrd=0;
         }
         return true;
     }
@@ -358,15 +273,15 @@ int main(int argc, char * argv[])
     ResourceFinder moduleRF;
     moduleRF.setVerbose(false);
     moduleRF.setDefaultContext("periPersonalSpace");
-    moduleRF.setDefaultConfigFile("visuoTactileRF.ini");
+    moduleRF.setDefaultConfigFile("ultimateTracker.ini");
     moduleRF.configure(argc,argv);
 
     if (moduleRF.check("help"))
     {    
         cout << endl << "Options:" << endl;
         cout << "   --context    path:   where to find the called resource (default periPersonalSpace)." << endl;
-        cout << "   --from       from:   the name of the .ini file (default visuoTactileRF.ini)." << endl;
-        cout << "   --name       name:   the name of the module (default visuoTactileRF)." << endl;
+        cout << "   --from       from:   the name of the .ini file (default ultimateTracker.ini)." << endl;
+        cout << "   --name       name:   the name of the module (default ultimateTracker)." << endl;
         cout << "   --robot      robot:  the name of the robot. Default icub." << endl;
         cout << "   --rate       rate:   the period used by the thread. Default 50ms." << endl;
         cout << "   --verbosity  int:    verbosity level (default 0)." << endl;
@@ -382,8 +297,8 @@ int main(int argc, char * argv[])
         return -1;
     }
 
-    visuoTactileRF visTacRF;
-    return visTacRF.runModule(moduleRF);
+    ultimateTracker ultTrack;
+    return ultTrack.runModule(moduleRF);
 }
 
 // empty line to make gcc happy
