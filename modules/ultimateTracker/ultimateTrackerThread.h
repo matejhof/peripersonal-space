@@ -83,10 +83,11 @@ protected:
 
     /***************************************************************************/
     // INTERNAL VARIABLES:
-    BufferedPort<yarp::sig::Vector> *inputPortTest;  // port for reading images
-    yarp::sig::Vector               *inputVector;
+    int state;
 
-    iCub::ctrl::Kalman *posVelEstimator;
+    BufferedPort<Bottle> *motionCUTBlobs;       // port for reading images
+    Bottle               *motionCUTBottle;
+    Vector                motionCUTPos;
 
 
     /**

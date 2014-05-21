@@ -147,7 +147,7 @@ public:
         robot = "icub";
 
         verbosity  = 0;      // verbosity
-        rate       = 100;    // rate of the ultimateTrackerThread
+        rate       = 20;    // rate of the ultimateTrackerThread
 
         //******************************************************
         //********************** CONFIGS ***********************

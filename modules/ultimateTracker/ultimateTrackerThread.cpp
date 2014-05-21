@@ -17,30 +17,55 @@ IncomingEvent eventFromBottle(const Bottle &b)
 ultimateTrackerThread::ultimateTrackerThread(int _rate, const string &_name, const string &_robot, int _v) :
                        RateThread(_rate), name(_name), robot(_robot), verbosity(_v)
 {
-    int order  =4;
-    int inputs =3;
-    Matrix A=eye(order);
-    Matrix H=zeros(inputs,order);
-    Matrix Q=eye(order);
-    Matrix R=eye(order);
-    posVelEstimator = new Kalman(A,H,Q,R);
+    stateFlag = 0;
 
-    inputPortTest = new BufferedPort<yarp::sig::Vector>;
+    motionCUTBlobs = new BufferedPort<Bottle>;
+    motionCUTPos.resize(2,0.0);
 }
 
 bool ultimateTrackerThread::threadInit()
 {
-    inputPortTest -> open(("/"+name+"/test:i").c_str());
+    motionCUTBlobs -> open(("/"+name+"/mCUT:i").c_str());
 }
 
 void ultimateTrackerThread::run()
 {
-    inputVector = inputPortTest -> read(false);
+    // state #01: check the motionCUT and see if there's something interesting in IT
 
-    if (inputVector != NULL)
+    switch (stateFlag)
     {
-
-    }
+        case 0:
+            printMessage(0,'Looking for motion');
+            stateFlag++;
+            break;
+        case 1:
+            if (motionCUTBottle = motionCUTPort.read(false))
+            {
+                if (motionCUTBottle!=NULL)
+                {
+                    motionCUTPos.zero();
+                    Bottle *blob;
+                    // Let's process the blob with the maximum size
+                    blob = motionCUTBottle->get(blobidx).asList();
+                    motionCUTPos(0) = blob->get(0).asInt();
+                    motionCUTPos(1) = blob->get(1).asInt();
+                    if stabilityCheck()
+                    {
+                        printMessage(0,'Initializing tracker');
+                        initializeTracker();
+                        stateFlag++
+                    }
+                }
+            }
+            break;
+        case 2:
+            printMessage(0,'Initializing: looking for motion');
+            stateFlag++;
+            break;
+        default:
+            printMessage(0,"ERROR!!! doubleTouchThread should never be here!!!\nStep: %d",step);
+            delay(1);
+            break;
 }
 
 
@@ -63,12 +88,9 @@ int ultimateTrackerThread::printMessage(const int l, const char *f, ...) const
 
 void ultimateTrackerThread::threadRelease()
 {
-    delete posVelEstimator;
-    posVelEstimator = 0;
-
-    printMessage(0,"Closing ports..\n");
-        closePort(inputPortTest);
-        printMessage(1,"    inputPortTest successfully closed!\n");
+    // printMessage(0,"Closing ports..\n");
+    //     closePort(inputPortTest);
+    //     printMessage(1,"    inputPortTest successfully closed!\n");
 }
 
 // empty line to make gcc happy

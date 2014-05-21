@@ -272,9 +272,13 @@ void vtWThread::run()
     
     if (isTarget)
     {
-        igaze -> lookAtFixationPoint(pf3dTrackerPos);
-        // igaze -> lookAtFixationPoint(doubleTouchPos);
-
+        if (pf3dTrackerPos[0]!=0.0 && pf3dTrackerPos[1]!=0.0 && pf3dTrackerPos[2]!=0.0)
+            igaze -> lookAtFixationPoint(pf3dTrackerPos);
+        else if (doubleTouchPos[0]!=0.0 && doubleTouchPos[1]!=0.0 && doubleTouchPos[2]!=0.0)
+            igaze -> lookAtFixationPoint(doubleTouchPos);
+        else if (motionCUTPos[0]!=0.0 && motionCUTPos[1]!=0.0 && motionCUTPos[2]!=0.0)
+            igaze -> lookAtFixationPoint(motionCUTPos);
+        
         Bottle& eventsBottle = eventsPort.prepare();
         eventsBottle.clear();
         for (size_t i = 0; i < events.size(); i++)
