@@ -120,48 +120,17 @@ public:
                 //-----------------
                 case VOCAB4('s','a','v','e'):
                 {
-                    int res=Vocab::encode("saved");
-                    if (ultTrckrThrd -> save())
-                    {
-                        reply.addVocab(ack);
-                    }
-                    else
-                        reply.addVocab(nack);
+                    // int res=Vocab::encode("saved");
+                    // if (ultTrckrThrd -> save())
+                    // {
+                    //     reply.addVocab(ack);
+                    // }
+                    // else
+                    //     reply.addVocab(nack);
                     
-                    reply.addVocab(res);
-                    return true;
+                    // reply.addVocab(res);
+                    // return true;
                 }
-                case VOCAB4('l','o','a','d'):
-                {
-                    int res=Vocab::encode("loaded");
-                    if (ultTrckrThrd -> load())
-                    {
-                        reply.addVocab(ack);
-                    }
-                    else
-                        reply.addVocab(nack);
-                    
-                    reply.addVocab(res);
-                    return true;
-                }
-                case VOCAB4('r','e','s','e'):
-                {
-                    ultTrckrThrd -> resetParzenWindows();
-                    reply.addVocab(ack);
-                    return true;
-                }
-                case VOCAB4('s','t','o','p'):
-                {
-                    ultTrckrThrd -> stopLearning();
-                    reply.addVocab(ack);
-                    return true;
-                }
-               case VOCAB4('r','e','s','t'):
-                {
-                    ultTrckrThrd -> restoreLearning();
-                    reply.addVocab(ack);
-                    return true;
-                }     
                 //-----------------
                 default:
                     return RFModule::respond(command,reply);
