@@ -12,6 +12,13 @@
         <tag>motionCUT</tag>
     </module>
     <module>
+        <name>templatePFTracker</name>
+        <parameters></parameters>
+        <node>icub-b2</node>
+        <stdio></stdio>
+        <tag>templatePFTracker</tag>
+    </module>
+    <module>
         <name>SFM</name>
         <parameters></parameters>
         <node>icub16</node>
@@ -60,6 +67,12 @@
         <tag>motionCUT_viewer</tag>
     </module>
     <module>
+        <name>yarpview</name>
+        <parameters>--name /templatePFTracker_viewer --RefreshTime 33 --x 1220 --y 300 --w 400 --h 400</parameters>
+        <node>icub12</node>
+        <tag>templatePFTracker_viewer</tag>
+    </module>
+    <module>
         <name>iCubSkinGui</name>
         <parameters> --context periPersonalSpace --from left_forearm_vtRF.ini --name /vtRFSkinGui --useCalibration --xpos 0 --ypos 640 --width 350 --height 350</parameters>
         <node>icub12</node>
@@ -84,6 +97,16 @@
         <tag>iCubSkinGui_right_hand</tag>
     </module>
 
+    <connection>
+        <from>/icub/camcalib/left/out</from>
+        <to>/templatePFTracker/left/image:i</to>
+        <protocol>udp</protocol>
+    </connection>
+    <connection>
+        <from>/templatePFTracker/left/image:o</from>
+        <to>/templatePFTracker_viewer</to>
+        <protocol>udp</protocol>
+    </connection>
     <connection>
         <from>/icub/camcalib/left/out</from>
         <to>/visuoTactileRF/imageL:i</to>
