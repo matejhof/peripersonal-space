@@ -24,6 +24,14 @@ ultimateTrackerThread::ultimateTrackerThread(int _rate, const string &_name, con
     motionCUTPos.resize(2,0.0);
     templatePFTrackerTarget = new BufferedPort<Bottle>;
     templatePFTrackerPos.resize(2,0.0);
+
+    int order  =4;
+    int inputs =3;
+    Matrix A=eye(order);
+    Matrix H=zeros(inputs,order);
+    Matrix Q=eye(order);
+    Matrix R=eye(order);
+    posVelEstimator = new Kalman(A,H,Q,R);
 }
 
 bool ultimateTrackerThread::threadInit()
@@ -182,6 +190,10 @@ int ultimateTrackerThread::printMessage(const int l, const char *f, ...) const
 
 void ultimateTrackerThread::threadRelease()
 {
+    printMessage(0,"Closing kalman..\n");
+        delete posVelEstimator;
+        posVelEstimator = 0;
+        
     printMessage(0,"Closing ports..\n");
         closePort(motionCUTBlobs);
         printMessage(1,"    motionCUTBlobs successfully closed!\n");

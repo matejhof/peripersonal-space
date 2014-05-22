@@ -85,6 +85,7 @@ protected:
     // INTERNAL VARIABLES:
     int    stateFlag;
     double timeNow;
+    iCub::ctrl::Kalman *posVelEstimator;
 
     BufferedPort<Bottle>       *motionCUTBlobs;  // port for reading from motionCUT
     Bottle                     *motionCUTBottle; // bottle used for the port
