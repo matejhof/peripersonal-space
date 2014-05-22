@@ -68,7 +68,7 @@
     </module>
     <module>
         <name>yarpview</name>
-        <parameters>--name /templatePFTracker_viewer --RefreshTime 33 --x 1220 --y 300 --w 400 --h 400</parameters>
+        <parameters>--name /templatePFTracker_viewer --RefreshTime 33 --x 1320 --y 300 --w 400 --h 400</parameters>
         <node>icub12</node>
         <tag>templatePFTracker_viewer</tag>
     </module>

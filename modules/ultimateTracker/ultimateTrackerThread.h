@@ -91,8 +91,9 @@ protected:
     Vector                      motionCUTPos;    // current position of the center of the blob
     vector <yarp::sig::Vector>  oldMcutPoss;     // old positions
 
-    BufferedPort<Bottle>       *templatePFTrackerTarget;  // port for reading from motionCUT
-    Vector                      templatePFTrackerPos;     // current position of the center of the blob
+    BufferedPort<Bottle>  *templatePFTrackerTarget;  // port for reading from motionCUT
+    Bottle                *templatePFTrackerBottle;  // bottle used for the port
+    Vector                 templatePFTrackerPos;     // current position of the center of the blob
 
     bool noInput();
 

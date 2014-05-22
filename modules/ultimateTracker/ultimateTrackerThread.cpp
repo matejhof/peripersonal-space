@@ -22,14 +22,19 @@ ultimateTrackerThread::ultimateTrackerThread(int _rate, const string &_name, con
 
     motionCUTBlobs = new BufferedPort<Bottle>;
     motionCUTPos.resize(2,0.0);
+    templatePFTrackerTarget = new BufferedPort<Bottle>;
+    templatePFTrackerPos.resize(2,0.0);
 }
 
 bool ultimateTrackerThread::threadInit()
 {
     motionCUTBlobs -> open(("/"+name+"/mCUT:i").c_str());
-
+    templatePFTrackerTarget -> open(("/"+name+"/pfTracker:i").c_str());
 
     Network::connect("/motionCUT/blobs:o",("/"+name+"/mCUT:i").c_str());
+    Network::connect("/templatePFTracker/target:o",("/"+name+"/pfTracker:i").c_str());
+
+    return true;
 }
 
 void ultimateTrackerThread::run()
@@ -37,7 +42,7 @@ void ultimateTrackerThread::run()
     switch (stateFlag)
     {
         case 0:
-            printMessage(0,"Looking for motion");
+            printMessage(0,"Looking for motion\n");
             timeNow = yarp::os::Time::now();
             oldMcutPoss.clear();
             stateFlag++;
@@ -46,19 +51,18 @@ void ultimateTrackerThread::run()
             // state #01: check the motionCUT and see if there's something interesting
             if (processMotion())
             {
-                printMessage(0,"Initializing tracker");
+                printMessage(0,"Initializing tracker\n");
+                timeNow = yarp::os::Time::now();
                 initializeTracker();
                 stateFlag++;
             }
             break;
         case 2:
-            printMessage(2,"Reading from tracker...");
+            printMessage(2,"Reading from tracker...\n");
             readFromTracker();
-
-            stateFlag++;
             break;
         default:
-            printMessage(0,"ERROR!!! ultimateTrackerThread should never be here!!!\nState: %d",stateFlag);
+            printMessage(0,"ERROR!!! ultimateTrackerThread should never be here!!!\nState: %d\n",stateFlag);
             Time::delay(1);
             break;
     }
@@ -92,8 +96,10 @@ bool ultimateTrackerThread::processMotion()
                 return true;
         }
     }
-    else if (noInput())
+    
+    if (noInput())
     {
+        timeNow = yarp::os::Time::now();
         oldMcutPoss.clear();
     }
     return false;
@@ -103,7 +109,7 @@ bool ultimateTrackerThread::stabilityCheck()
 {
     oldMcutPoss.push_back(motionCUTPos);
 
-    if (oldMcutPoss.size()>10)
+    if (oldMcutPoss.size()>20)
     {
         oldMcutPoss.erase(oldMcutPoss.begin());  //remove first element
         Vector avgPos(2,0.0);
@@ -119,6 +125,8 @@ bool ultimateTrackerThread::stabilityCheck()
         {
             return true;
         }
+        else
+            oldMcutPoss.clear();
     }
     return false;
 }
@@ -126,6 +134,19 @@ bool ultimateTrackerThread::stabilityCheck()
 
 bool ultimateTrackerThread::readFromTracker()
 {
+    if (templatePFTrackerBottle = templatePFTrackerTarget->read(false))
+    {
+        if (templatePFTrackerBottle!=NULL)
+        {
+            templatePFTrackerPos(0) = templatePFTrackerBottle->get(0).asDouble();
+            templatePFTrackerPos(1) = templatePFTrackerBottle->get(1).asDouble();
+        }
+    }
+
+    if (noInput())
+    {
+        stateFlag=0;
+    }
     return false;
 }
 
