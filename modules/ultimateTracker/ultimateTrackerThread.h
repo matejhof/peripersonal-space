@@ -83,11 +83,36 @@ protected:
 
     /***************************************************************************/
     // INTERNAL VARIABLES:
-    int state;
+    int    stateFlag;
+    double timeNow;
 
-    BufferedPort<Bottle> *motionCUTBlobs;       // port for reading images
-    Bottle               *motionCUTBottle;
-    Vector                motionCUTPos;
+    BufferedPort<Bottle>       *motionCUTBlobs;  // port for reading from motionCUT
+    Bottle                     *motionCUTBottle; // bottle used for the port
+    Vector                      motionCUTPos;    // current position of the center of the blob
+    vector <yarp::sig::Vector>  oldMcutPoss;     // old positions
+
+    BufferedPort<Bottle>       *templatePFTrackerTarget;  // port for reading from motionCUT
+    Vector                      templatePFTrackerPos;     // current position of the center of the blob
+
+    bool noInput();
+
+    bool processMotion();
+
+
+    /**
+    * Checks the stability of the motionCUT's blob center. It returns true if 
+    * there are at least 10 past events and the new sample differs from the past average
+    * for less than 1 pixel on the u axis and 1 on the v axis
+    **/
+    bool stabilityCheck();
+
+    bool initializeTracker();
+
+    bool readFromTracker();
+
+    bool getPointFromStereo();
+
+
 
 
     /**
