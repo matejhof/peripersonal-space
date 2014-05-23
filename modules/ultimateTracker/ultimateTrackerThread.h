@@ -85,16 +85,26 @@ protected:
     // INTERNAL VARIABLES:
     int    stateFlag;
     double timeNow;
-    iCub::ctrl::Kalman *posVelEstimator;
+
+    vector <iCub::ctrl::Kalman> posVelKalman;
+    double kalmanThres;
+    Matrix kalmanA;
+    Matrix kalmanH;
+    Matrix kalmanQ;
+    Matrix kalmanR;
+    Matrix kalmanP;
 
     BufferedPort<Bottle>       *motionCUTBlobs;  // port for reading from motionCUT
     Bottle                     *motionCUTBottle; // bottle used for the port
     Vector                      motionCUTPos;    // current position of the center of the blob
     vector <yarp::sig::Vector>  oldMcutPoss;     // old positions
 
-    BufferedPort<Bottle>  *templatePFTrackerTarget;  // port for reading from motionCUT
+    BufferedPort<Bottle>  *templatePFTrackerTarget;  // port for reading from templatePFTracker
     Bottle                *templatePFTrackerBottle;  // bottle used for the port
     Vector                 templatePFTrackerPos;     // current position of the center of the blob
+
+    yarp::os::RpcClient SFMrpcPort;
+    Vector              SFMPos;
 
     bool noInput();
 
@@ -114,7 +124,7 @@ protected:
 
     bool getPointFromStereo();
 
-
+    bool manageKalman(const bool init);
 
 
     /**

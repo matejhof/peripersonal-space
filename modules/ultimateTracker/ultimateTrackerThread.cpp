@@ -22,25 +22,47 @@ ultimateTrackerThread::ultimateTrackerThread(int _rate, const string &_name, con
 
     motionCUTBlobs = new BufferedPort<Bottle>;
     motionCUTPos.resize(2,0.0);
+    
     templatePFTrackerTarget = new BufferedPort<Bottle>;
     templatePFTrackerPos.resize(2,0.0);
 
-    int order  =4;
-    int inputs =3;
-    Matrix A=eye(order);
-    Matrix H=zeros(inputs,order);
-    Matrix Q=eye(order);
-    Matrix R=eye(order);
-    posVelEstimator = new Kalman(A,H,Q,R);
+    SFMPos.resize(3,0.0);
+
+    int order  = 4;
+    kalmanA      = eye(order);
+    kalmanA(0,1) = 0.01;
+    kalmanA(0,2) = 0.0001;
+    kalmanA(1,2) = 0.01;
+    kalmanA(1,3) = 0.0001;
+    kalmanA(2,3) = 0.01;
+
+    kalmanH      = zeros(1,order);
+    kalmanH(0,0) = 1;
+
+    kalmanQ = 0.00001 * eye(order);
+    kalmanP = 0.00001 * eye(order);
+
+    // Threshold is set to chi2inv(0.95,1)
+    kalmanThres = 3.8415;
+
+    kalmanR      = eye(1);
+    kalmanR(0,0) = 0.01;
+
+    for (int i = 0; i < 3; i++)
+    {
+        posVelKalman.push_back(Kalman(kalmanA,kalmanH,kalmanQ,kalmanR));
+    }
 }
 
 bool ultimateTrackerThread::threadInit()
 {
     motionCUTBlobs -> open(("/"+name+"/mCUT:i").c_str());
     templatePFTrackerTarget -> open(("/"+name+"/pfTracker:i").c_str());
+    SFMrpcPort.open(("/"+name+"/SFM:o").c_str());
 
     Network::connect("/motionCUT/blobs:o",("/"+name+"/mCUT:i").c_str());
     Network::connect("/templatePFTracker/target:o",("/"+name+"/pfTracker:i").c_str());
+    Network::connect(("/"+name+"/SFM:o").c_str(),"/SFM/rpc");
 
     return true;
 }
@@ -66,14 +88,49 @@ void ultimateTrackerThread::run()
             }
             break;
         case 2:
-            printMessage(2,"Reading from tracker...\n");
+            printMessage(0,"Initializing Kalman filter...\n");
             readFromTracker();
+            if (getPointFromStereo())
+            {
+                manageKalman(0);
+                stateFlag++;
+            }
+            break;        
+        case 2:
+            printMessage(2,"Reading from tracker and SFM...\n");
+            readFromTracker();
+            if (getPointFromStereo())
+            {
+                manageKalman(1);
+            }
+            else
+                manageKalman(-1);
             break;
         default:
             printMessage(0,"ERROR!!! ultimateTrackerThread should never be here!!!\nState: %d\n",stateFlag);
             Time::delay(1);
             break;
     }
+}
+
+bool ultimateTrackerThread::manageKalman(const bool init)
+{
+    // If init is equal to 0, the filter has to be initialized,
+    // otherwise we need the predict/update stuff
+    if (init == 0)
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            posVelKalman(i).init(SFMPos(i),kalmanP);
+        }
+        return true;
+    }
+    else if (init == 1)
+    {
+        return true;
+    }
+
+    return false;
 }
 
 bool ultimateTrackerThread::noInput()
@@ -160,13 +217,31 @@ bool ultimateTrackerThread::readFromTracker()
 
 bool ultimateTrackerThread::getPointFromStereo()
 {
+    Bottle cmdSFM;
+    Bottle respSFM;
+    cmdSFM.clear();
+    respSFM.clear();
+    cmdSFM.addString("Point");
+    cmdSFM.addInt(int(templatePFTrackerPos(0)));
+    cmdSFM.addInt(int(templatePFTrackerPos(1)));
+    SFMrpcPort.write(cmdSFM, respSFM);
+
+    // Read the 3D coords and compute the distance to the set reference frame origin
+    if (respSFM.size() == 3)
+    {
+        SFMPos(0) = respSFM.get(0).asDouble(); // Get the X coordinate
+        SFMPos(1) = respSFM.get(1).asDouble(); // Get the Y coordinate
+        SFMPos(2) = respSFM.get(2).asDouble(); // Get the Z coordinate
+        return true;
+    } 
+
     return false;
 }
 
 bool ultimateTrackerThread::initializeTracker()
 {
     Network::connect("/motionCUT/crop:o","/templatePFTracker/template/image:i");
-    yarp::os::Time::delay(0.2);
+    yarp::os::Time::delay(0.25);
     Network::disconnect("/motionCUT/crop:o","/templatePFTracker/template/image:i");
     return false;
 }
@@ -190,10 +265,6 @@ int ultimateTrackerThread::printMessage(const int l, const char *f, ...) const
 
 void ultimateTrackerThread::threadRelease()
 {
-    printMessage(0,"Closing kalman..\n");
-        delete posVelEstimator;
-        posVelEstimator = 0;
-        
     printMessage(0,"Closing ports..\n");
         closePort(motionCUTBlobs);
         printMessage(1,"    motionCUTBlobs successfully closed!\n");
