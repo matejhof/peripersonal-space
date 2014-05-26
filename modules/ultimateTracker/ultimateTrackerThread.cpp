@@ -29,7 +29,7 @@ ultimateTrackerThread::ultimateTrackerThread(int _rate, const string &_name, con
     kalState  = KALMAN_INIT;
     kalOrder  = 4;
     kalEst.resize(kalOrder,0.0);
-    kalStateVec.resize(kalOrder,0.0);
+    kalEstPos.resize(3,0.0);
     kalTs     = 0.1;
     kalClock  = 0.0;
     kalA      = eye(kalOrder);
@@ -67,6 +67,7 @@ bool ultimateTrackerThread::threadInit()
     Network::connect("/motionCUT/blobs:o",("/"+name+"/mCUT:i").c_str());
     Network::connect("/templatePFTracker/target:o",("/"+name+"/pfTracker:i").c_str());
     Network::connect(("/"+name+"/SFM:o").c_str(),"/SFM/rpc");
+    Network::connect(("/"+name+"/gui:o").c_str(),"/iCubGui/objects");
 
     return true;
 }
@@ -93,10 +94,10 @@ void ultimateTrackerThread::run()
             }
             break;
         case 2:
-            printMessage(0,"Initializing Kalman filter...\n");
             readFromTracker();
             if (getPointFromStereo())
             {
+                printMessage(0,"Initializing Kalman filter...\n");
                 manageKalman();
                 stateFlag++;
             }
@@ -106,8 +107,8 @@ void ultimateTrackerThread::run()
             readFromTracker();
             if (getPointFromStereo())
             {
-                kalState == KALMAN_NEWDATA;
-                manageKalman();
+                kalState    == KALMAN_NEWDATA;
+                kalEstPos == manageKalman();
                 manageiCubGui();
             }
             else
@@ -119,6 +120,7 @@ void ultimateTrackerThread::run()
             break;
     }
     kalClock += kalTs;
+    printMessage(1,"stateFlag %i kalmanPos: %s\n",stateFlag,kalEstPos.toString().c_str());
 }
 
 Vector ultimateTrackerThread::manageKalman()
@@ -140,7 +142,7 @@ Vector ultimateTrackerThread::manageKalman()
     // If init==1 (i.e. I've got a new data) and kalClock>=kalTs (i.e.
     // the filter did a new step), let's correct the current estimation
     // with the new measurement
-    else if (kalState==KALMAN_NEWDATA)
+    else if (kalState == KALMAN_NEWDATA)
     {
         for (int i = 0; i < 3; i++)
         {
@@ -153,7 +155,7 @@ Vector ultimateTrackerThread::manageKalman()
             {
                 printMessage(0,"Validation Gate for kalman #%i has been overcome! Returning to initial state.",i);
                 stateFlag = 0;
-                kalState == KALMAN_INIT;
+                kalState = KALMAN_INIT;
                 return res;
             }
         }
@@ -180,7 +182,7 @@ bool ultimateTrackerThread::manageiCubGui()
     {
         Bottle obj;
         obj.addString("object");
-        obj.addString("ball");
+        obj.addString("MONSTER");
      
         // size 
         obj.addDouble(50.0);
@@ -278,6 +280,7 @@ bool ultimateTrackerThread::readFromTracker()
     {
         if (templatePFTrackerBottle!=NULL)
         {
+            timeNow = yarp::os::Time::now();
             templatePFTrackerPos(0) = templatePFTrackerBottle->get(0).asDouble();
             templatePFTrackerPos(1) = templatePFTrackerBottle->get(1).asDouble();
         }
@@ -285,7 +288,7 @@ bool ultimateTrackerThread::readFromTracker()
 
     if (noInput())
     {
-        stateFlag=0;
+        stateFlag = 0;
     }
     return false;
 }
@@ -296,7 +299,7 @@ bool ultimateTrackerThread::getPointFromStereo()
     Bottle respSFM;
     cmdSFM.clear();
     respSFM.clear();
-    cmdSFM.addString("Point");
+    cmdSFM.addString("Root");
     cmdSFM.addInt(int(templatePFTrackerPos(0)));
     cmdSFM.addInt(int(templatePFTrackerPos(1)));
     SFMrpcPort.write(cmdSFM, respSFM);
@@ -304,9 +307,17 @@ bool ultimateTrackerThread::getPointFromStereo()
     // Read the 3D coords and compute the distance to the set reference frame origin
     if (respSFM.size() == 3)
     {
-        SFMPos(0) = respSFM.get(0).asDouble(); // Get the X coordinate
-        SFMPos(1) = respSFM.get(1).asDouble(); // Get the Y coordinate
-        SFMPos(2) = respSFM.get(2).asDouble(); // Get the Z coordinate
+        Vector SFMtmp(3,0.0);
+        SFMtmp(0) = respSFM.get(0).asDouble(); // Get the X coordinate
+        SFMtmp(1) = respSFM.get(1).asDouble(); // Get the Y coordinate
+        SFMtmp(2) = respSFM.get(2).asDouble(); // Get the Z coordinate
+
+        if (SFMtmp(0) == 0.0 && SFMtmp(1) == 0.0 && SFMtmp(2) == 0.0)
+        {
+            return false;
+        }
+
+        SFMPos = SFMtmp;
         return true;
     } 
 

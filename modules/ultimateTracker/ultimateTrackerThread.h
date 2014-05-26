@@ -88,7 +88,7 @@ protected:
     int    kalState;
     double kalTs;
     double kalClock;
-    Vector kalStateVec;
+    Vector kalEstPos;
     Vector kalEst;
     double kalThres;
     Matrix kalA;
