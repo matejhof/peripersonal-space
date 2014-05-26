@@ -98,6 +98,11 @@
     </module>
 
     <connection>
+        <from>/ultimateTracker/gui:o</from>
+        <to>/iCubGui/objects</to>
+        <protocol>tcp</protocol>
+    </connection>
+    <connection>
         <from>/icub/camcalib/left/out</from>
         <to>/templatePFTracker/left/image:i</to>
         <protocol>udp</protocol>
