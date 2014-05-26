@@ -7,12 +7,10 @@
 
 #include "ultimateTrackerThread.h"
 
-IncomingEvent eventFromBottle(const Bottle &b)
-{
-    IncomingEvent ie;
-    ie.fromBottle(b);
-    return ie;
-};
+#define KALMAN_INIT     0
+#define KALMAN_NORMAL   1
+#define KALMAN_NOINPUT  2
+#define KALMAN_NEWDATA  3
 
 ultimateTrackerThread::ultimateTrackerThread(int _rate, const string &_name, const string &_robot, int _v) :
                        RateThread(_rate), name(_name), robot(_robot), verbosity(_v)
@@ -28,29 +26,34 @@ ultimateTrackerThread::ultimateTrackerThread(int _rate, const string &_name, con
 
     SFMPos.resize(3,0.0);
 
-    int order  = 4;
-    kalmanA      = eye(order);
-    kalmanA(0,1) = 0.01;
-    kalmanA(0,2) = 0.0001;
-    kalmanA(1,2) = 0.01;
-    kalmanA(1,3) = 0.0001;
-    kalmanA(2,3) = 0.01;
+    kalState  = KALMAN_INIT;
+    kalOrder  = 4;
+    kalEst.resize(kalOrder,0.0);
+    kalStateVec.resize(kalOrder,0.0);
+    kalTs     = 0.1;
+    kalClock  = 0.0;
+    kalA      = eye(kalOrder);
+    kalA(0,1) = 0.01;
+    kalA(0,2) = 0.0001;
+    kalA(1,2) = 0.01;
+    kalA(1,3) = 0.0001;
+    kalA(2,3) = 0.01;
 
-    kalmanH      = zeros(1,order);
-    kalmanH(0,0) = 1;
+    kalH      = zeros(1,kalOrder);
+    kalH(0,0) = 1;
 
-    kalmanQ = 0.00001 * eye(order);
-    kalmanP = 0.00001 * eye(order);
+    kalQ = 0.00001 * eye(kalOrder);
+    kalP = 0.00001 * eye(kalOrder);
 
     // Threshold is set to chi2inv(0.95,1)
-    kalmanThres = 3.8415;
+    kalThres = 3.8415;
 
-    kalmanR      = eye(1);
-    kalmanR(0,0) = 0.01;
+    kalR      = eye(1);
+    kalR(0,0) = 0.01;
 
     for (int i = 0; i < 3; i++)
     {
-        posVelKalman.push_back(Kalman(kalmanA,kalmanH,kalmanQ,kalmanR));
+        posVelKalman.push_back(Kalman(kalA,kalH,kalQ,kalR));
     }
 }
 
@@ -59,6 +62,7 @@ bool ultimateTrackerThread::threadInit()
     motionCUTBlobs -> open(("/"+name+"/mCUT:i").c_str());
     templatePFTrackerTarget -> open(("/"+name+"/pfTracker:i").c_str());
     SFMrpcPort.open(("/"+name+"/SFM:o").c_str());
+    outportGui.open(("/"+name+"/gui:o").c_str());
 
     Network::connect("/motionCUT/blobs:o",("/"+name+"/mCUT:i").c_str());
     Network::connect("/templatePFTracker/target:o",("/"+name+"/pfTracker:i").c_str());
@@ -76,6 +80,7 @@ void ultimateTrackerThread::run()
             timeNow = yarp::os::Time::now();
             oldMcutPoss.clear();
             stateFlag++;
+            kalClock=0.0;
             break;
         case 1:
             // state #01: check the motionCUT and see if there's something interesting
@@ -92,45 +97,116 @@ void ultimateTrackerThread::run()
             readFromTracker();
             if (getPointFromStereo())
             {
-                manageKalman(0);
+                manageKalman();
                 stateFlag++;
             }
-            break;        
-        case 2:
+            break;
+        case 3:
             printMessage(2,"Reading from tracker and SFM...\n");
             readFromTracker();
             if (getPointFromStereo())
             {
-                manageKalman(1);
+                kalState == KALMAN_NEWDATA;
+                manageKalman();
+                manageiCubGui();
             }
             else
-                manageKalman(-1);
+                manageKalman();
             break;
         default:
             printMessage(0,"ERROR!!! ultimateTrackerThread should never be here!!!\nState: %d\n",stateFlag);
             Time::delay(1);
             break;
     }
+    kalClock += kalTs;
 }
 
-bool ultimateTrackerThread::manageKalman(const bool init)
+Vector ultimateTrackerThread::manageKalman()
 {
-    // If init is equal to 0, the filter has to be initialized,
-    // otherwise we need the predict/update stuff
-    if (init == 0)
+    Vector res(3,-1.0);
+    // If init is equal to 0, the filter has to be initialized
+    if (kalState == KALMAN_INIT)
     {
         for (int i = 0; i < 3; i++)
         {
-            posVelKalman(i).init(SFMPos(i),kalmanP);
+            Vector state0(1,SFMPos(i));
+            kalClock = 0.0;
+            posVelKalman[i].init(state0,kalP);
+            // currEst  = posVelKalman(i).filt(SFMPos(i));
+            // res(i)   = currEst(0);
+            // res(2+i) = currEst(1);
         }
-        return true;
     }
-    else if (init == 1)
+    // If init==1 (i.e. I've got a new data) and kalClock>=kalTs (i.e.
+    // the filter did a new step), let's correct the current estimation
+    // with the new measurement
+    else if (kalState==KALMAN_NEWDATA)
     {
-        return true;
+        for (int i = 0; i < 3; i++)
+        {
+            Vector measurement(1,SFMPos(i));
+            posVelKalman[i].correct(measurement);
+
+            // After correction, let's check if the validationGate has overcome the threshold.
+            // If this is the case, let's go back to the initial state.
+            if ( posVelKalman[i].get_ValidationGate() > kalThres )
+            {
+                printMessage(0,"Validation Gate for kalman #%i has been overcome! Returning to initial state.",i);
+                stateFlag = 0;
+                kalState == KALMAN_INIT;
+                return res;
+            }
+        }
+        kalState == KALMAN_NOINPUT;
     }
 
-    return false;
+    if (kalState != KALMAN_INIT)
+    {
+        Vector prediction;
+        for (int i = 0; i < 3; i++)
+        {
+            Vector input(1,0.0);
+            prediction = posVelKalman[i].predict(input);
+            res(i) = prediction(0);
+        }
+    }
+
+    return res;
+}
+
+bool ultimateTrackerThread::manageiCubGui()
+{
+    if (outportGui.getOutputCount()>0)
+    {
+        Bottle obj;
+        obj.addString("object");
+        obj.addString("ball");
+     
+        // size 
+        obj.addDouble(50.0);
+        obj.addDouble(50.0);
+        obj.addDouble(50.0);
+    
+        // positions
+        obj.addDouble(1000.0*SFMPos[0]);
+        obj.addDouble(1000.0*SFMPos[1]);
+        obj.addDouble(1000.0*SFMPos[2]);
+    
+        // orientation
+        obj.addDouble(0.0);
+        obj.addDouble(0.0);
+        obj.addDouble(0.0);
+    
+        // color
+        obj.addInt(255);
+        obj.addInt(125);
+        obj.addInt(125);
+    
+        // transparency
+        obj.addDouble(0.9);
+    
+        outportGui.write(obj);
+    }
 }
 
 bool ultimateTrackerThread::noInput()
@@ -195,7 +271,6 @@ bool ultimateTrackerThread::stabilityCheck()
     }
     return false;
 }
-
 
 bool ultimateTrackerThread::readFromTracker()
 {

@@ -22,10 +22,7 @@
 #ifndef __VTRFTHREAD_H__
 #define __VTRFTHREAD_H__
 
-#include <yarp/os/Time.h>
-#include <yarp/os/RateThread.h>
-#include <yarp/os/BufferedPort.h>
-#include <yarp/os/RFModule.h>
+#include <yarp/os/all.h>
 
 #include <yarp/sig/Vector.h>
 #include <yarp/sig/Matrix.h>
@@ -87,12 +84,18 @@ protected:
     double timeNow;
 
     vector <iCub::ctrl::Kalman> posVelKalman;
-    double kalmanThres;
-    Matrix kalmanA;
-    Matrix kalmanH;
-    Matrix kalmanQ;
-    Matrix kalmanR;
-    Matrix kalmanP;
+    int    kalOrder;
+    int    kalState;
+    double kalTs;
+    double kalClock;
+    Vector kalStateVec;
+    Vector kalEst;
+    double kalThres;
+    Matrix kalA;
+    Matrix kalH;
+    Matrix kalQ;
+    Matrix kalR;
+    Matrix kalP;
 
     BufferedPort<Bottle>       *motionCUTBlobs;  // port for reading from motionCUT
     Bottle                     *motionCUTBottle; // bottle used for the port
@@ -103,13 +106,14 @@ protected:
     Bottle                *templatePFTrackerBottle;  // bottle used for the port
     Vector                 templatePFTrackerPos;     // current position of the center of the blob
 
-    yarp::os::RpcClient SFMrpcPort;
-    Vector              SFMPos;
+    RpcClient SFMrpcPort;
+    Vector    SFMPos;
+
+    Port outportGui;
 
     bool noInput();
 
     bool processMotion();
-
 
     /**
     * Checks the stability of the motionCUT's blob center. It returns true if 
@@ -124,8 +128,9 @@ protected:
 
     bool getPointFromStereo();
 
-    bool manageKalman(const bool init);
+    Vector manageKalman();
 
+    bool manageiCubGui();
 
     /**
     * Prints a message according to the verbosity level:
