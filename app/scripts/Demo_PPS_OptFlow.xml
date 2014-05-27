@@ -6,7 +6,7 @@
 
     <module>
         <name>motionCUT</name>
-        <parameters>--recogThres 0.015 --blobMinSizeThres 20 --framesPersistence 3 --cropRadius 20</parameters>
+        <parameters>--recogThres 0.015 --blobMinSizeThres 20 --framesPersistence 3 --cropSize</parameters>
         <node>icub-b1</node>
         <stdio></stdio>
         <tag>motionCUT</tag>
