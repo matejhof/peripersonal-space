@@ -92,10 +92,10 @@ protected:
         Vector                pf3dTrackerPos;
         Vector                pf3dTrackerVelEstimate;
 
-        BufferedPort<Bottle>  motionCUTPort;
-        Bottle               *motionCUTBottle;
-        Vector                motionCUTPos;
-        Vector                motionCUTVelEstimate;
+        BufferedPort<Bottle>  optFlowPort;
+        Bottle               *optFlowBottle;
+        Vector                optFlowPos;
+        Vector                optFlowVelEstimate;
 
         BufferedPort<Bottle>  doubleTouchPort;           
         Bottle               *doubleTouchBottle;
@@ -103,7 +103,7 @@ protected:
         Vector                doubleTouchVelEstimate;
 
     // Velocity Estimators (using adaptive window linear fitting)
-        AWLinEstimator       *linEst_motionCUT;
+        AWLinEstimator       *linEst_optFlow;
         AWLinEstimator       *linEst_pf3dTracker;
         AWLinEstimator       *linEst_doubleTouch;
 

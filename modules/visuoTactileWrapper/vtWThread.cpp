@@ -10,8 +10,8 @@
 vtWThread::vtWThread(int _rate, const string &_name, const string &_robot, int _v) :
                        RateThread(_rate), name(_name), robot(_robot), verbosity(_v)
 {
-    motionCUTPos.resize(3,0.0);
-    motionCUTVelEstimate.resize(3,0.0);
+    optFlowPos.resize(3,0.0);
+    optFlowVelEstimate.resize(3,0.0);
 
     pf3dTrackerPos.resize(3,0.0);
     pf3dTrackerVelEstimate.resize(3,0.0);
@@ -27,13 +27,13 @@ vtWThread::vtWThread(int _rate, const string &_name, const string &_robot, int _
 
 bool vtWThread::threadInit()
 {
-    motionCUTPort.open(("/"+name+"/motionCUT:i").c_str());
+    optFlowPort.open(("/"+name+"/optFlow:i").c_str());
     pf3dTrackerPort.open(("/"+name+"/pf3dTracker:i").c_str());
     doubleTouchPort.open(("/"+name+"/doubleTouch:i").c_str());
     eventsPort.open(("/"+name+"/events:o").c_str());
     depth2kinPort.open(("/"+name+"/depth2kin:o").c_str());
     
-    Network::connect("/motionCUT/blobs:o",("/"+name+"/motionCUT:i").c_str());
+    Network::connect("/optFlow/blobs:o",("/"+name+"/optFlow:i").c_str());
     Network::connect("/pf3dTracker/data:o",("/"+name+"/pf3dTracker:i").c_str());
     Network::connect("/doubleTouch/status:o",("/"+name+"/doubleTouch:i").c_str());
     Network::connect(("/"+name+"/events:o").c_str(),"/visuoTactileRF/events:i");
@@ -105,7 +105,7 @@ bool vtWThread::threadInit()
         iencsL->getAxes(&jntsL);
         encsL = new yarp::sig::Vector(jntsL,0.0);
 
-    linEst_motionCUT   = new AWLinEstimator(16,0.05);
+    linEst_optFlow   = new AWLinEstimator(16,0.05);
     linEst_pf3dTracker = new AWLinEstimator(16,0.05);
     linEst_doubleTouch = new AWLinEstimator(16,0.05);
     
@@ -117,19 +117,19 @@ void vtWThread::run()
     bool isTarget = false;
     events.clear();
 
-    // process the motionCUT
-    if (motionCUTBottle = motionCUTPort.read(false))
+    // process the optFlow
+    if (optFlowBottle = optFlowPort.read(false))
     {
-        if (motionCUTBottle!=NULL)
+        if (optFlowBottle!=NULL)
         {
-            motionCUTPos.zero();
+            optFlowPos.zero();
             int maxSize = -1;
             int blobidx = -1;
             int size    = -1;
             Bottle *blob;
 
             // Let's process the blob with the maximum size
-            blob = motionCUTBottle->get(blobidx).asList();
+            blob = optFlowBottle->get(blobidx).asList();
 
             Vector px(2,0.0);
             px(0) = blob->get(0).asInt();
@@ -142,38 +142,38 @@ void vtWThread::run()
                 cmd.addInt(px[1]);
 
                 SFMPort.write(cmd,reply);
-                motionCUTPos[0]=reply.get(1).asDouble();
-                motionCUTPos[1]=reply.get(2).asDouble();
-                motionCUTPos[2]=reply.get(3).asDouble();
+                optFlowPos[0]=reply.get(1).asDouble();
+                optFlowPos[1]=reply.get(2).asDouble();
+                optFlowPos[2]=reply.get(3).asDouble();
             }
             else
             {
                 // 0 is for the left image
                 // 1 is the distance [m] of the object from the image plane (extended to infinity)
-                igaze->get3DPoint(0,px,1,motionCUTPos);
+                igaze->get3DPoint(0,px,1,optFlowPos);
             }
 
-            if (motionCUTPos[0]!=0.0 && motionCUTPos[1]!=0.0 && motionCUTPos[2]!=0.0)
+            if (optFlowPos[0]!=0.0 && optFlowPos[1]!=0.0 && optFlowPos[2]!=0.0)
             {
                 if (depth2kinPort.getOutputCount()>0)
                 {
                     Bottle cmd,reply;
                     cmd.addString("getPoint");
                     cmd.addString("right");   // TO BE MODIFIED
-                    cmd.addDouble(motionCUTPos[0]);
-                    cmd.addDouble(motionCUTPos[1]);
-                    cmd.addDouble(motionCUTPos[2]);
+                    cmd.addDouble(optFlowPos[0]);
+                    cmd.addDouble(optFlowPos[1]);
+                    cmd.addDouble(optFlowPos[2]);
 
                     depth2kinPort.write(cmd,reply);
-                    motionCUTPos[0]=reply.get(1).asDouble();
-                    motionCUTPos[1]=reply.get(2).asDouble();
-                    motionCUTPos[2]=reply.get(3).asDouble();
+                    optFlowPos[0]=reply.get(1).asDouble();
+                    optFlowPos[1]=reply.get(2).asDouble();
+                    optFlowPos[2]=reply.get(3).asDouble();
                 }
 
-                AWPolyElement el(motionCUTPos,Time::now());
-                motionCUTVelEstimate=linEst_motionCUT->estimate(el);
+                AWPolyElement el(optFlowPos,Time::now());
+                optFlowVelEstimate=linEst_optFlow->estimate(el);
                 
-                events.push_back(IncomingEvent(motionCUTPos,motionCUTVelEstimate,0.05,"motionCUT"));
+                events.push_back(IncomingEvent(optFlowPos,optFlowVelEstimate,0.05,"optFlow"));
                 isTarget=true;
             }
         }
@@ -276,8 +276,8 @@ void vtWThread::run()
             igaze -> lookAtFixationPoint(pf3dTrackerPos);
         else if (doubleTouchPos[0]!=0.0 && doubleTouchPos[1]!=0.0 && doubleTouchPos[2]!=0.0)
             igaze -> lookAtFixationPoint(doubleTouchPos);
-        else if (motionCUTPos[0]!=0.0 && motionCUTPos[1]!=0.0 && motionCUTPos[2]!=0.0)
-            igaze -> lookAtFixationPoint(motionCUTPos);
+        else if (optFlowPos[0]!=0.0 && optFlowPos[1]!=0.0 && optFlowPos[2]!=0.0)
+            igaze -> lookAtFixationPoint(optFlowPos);
         
         Bottle& eventsBottle = eventsPort.prepare();
         eventsBottle.clear();
@@ -316,9 +316,9 @@ void vtWThread::threadRelease()
         ddG.close();
 
     printMessage(0,"Closing ports..\n");
-        motionCUTPort.interrupt();
-        motionCUTPort.close();
-        printMessage(1,"motionCUTPort successfully closed!\n");
+        optFlowPort.interrupt();
+        optFlowPort.close();
+        printMessage(1,"optFlowPort successfully closed!\n");
         pf3dTrackerPort.interrupt();
         pf3dTrackerPort.close();
         printMessage(1,"pf3dTrackerPort successfully closed!\n");
