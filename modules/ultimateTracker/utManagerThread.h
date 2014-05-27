@@ -71,7 +71,7 @@ protected:
     RpcClient SFMrpcPort;
     Vector    SFMPos;
 
-    Port outportGui;
+    Port outPortGui;
 
     bool noInput();
 
@@ -93,6 +93,8 @@ protected:
     bool manageKalman();
 
     bool manageiCubGui();
+
+    void deleteGuiTarget();
 
     /**
     * Prints a message according to the verbosity level:

@@ -21,7 +21,7 @@ bool utManagerThread::threadInit()
     motionCUTBlobs -> open(("/"+name+"/mCUT:i").c_str());
     templatePFTrackerTarget -> open(("/"+name+"/pfTracker:i").c_str());
     SFMrpcPort.open(("/"+name+"/SFM:o").c_str());
-    outportGui.open(("/"+name+"/gui:o").c_str());
+    outPortGui.open(("/"+name+"/gui:o").c_str());
 
     Network::connect("/motionCUT/blobs:o",("/"+name+"/mCUT:i").c_str());
     Network::connect("/templatePFTracker/target:o",("/"+name+"/pfTracker:i").c_str());
@@ -82,11 +82,11 @@ bool utManagerThread::manageKalman()
 
 bool utManagerThread::manageiCubGui()
 {
-    if (outportGui.getOutputCount()>0)
+    if (outPortGui.getOutputCount()>0)
     {
         Bottle obj;
         obj.addString("object");
-        obj.addString("MONSTER");
+        obj.addString("utTarget");
      
         // size 
         obj.addDouble(50.0);
@@ -111,7 +111,7 @@ bool utManagerThread::manageiCubGui()
         // transparency
         obj.addDouble(0.9);
     
-        outportGui.write(obj);
+        outPortGui.write(obj);
     }
 }
 
@@ -253,8 +253,22 @@ int utManagerThread::printMessage(const int l, const char *f, ...) const
         return -1;
 }
 
+void utManagerThread::deleteGuiTarget()
+{
+    if (outPortGui.getOutputCount()>0)
+    {
+        Bottle obj;
+        obj.addString("delete");
+        obj.addString("utTarget");
+        outPortGui.write(obj);
+    }
+}
+
 void utManagerThread::threadRelease()
 {
+    printMessage(0,"Deleting target from the iCubGui..\n");
+        deleteGuiTarget()
+
     printMessage(0,"Closing ports..\n");
         closePort(motionCUTBlobs);
         printMessage(1,"    motionCUTBlobs successfully closed!\n");
