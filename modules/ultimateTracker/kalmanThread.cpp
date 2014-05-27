@@ -50,28 +50,28 @@ void kalmanThread::run()
         if ( kS == KALMAN_NORMAL || kS == KALMAN_NOINPUT || kS == KALMAN_NEWINPUT )
         {
             kalmanPredict();
-            setKalmanOutput();
-
+            
             if ( kS == KALMAN_NEWINPUT )
             {
-                kalmanUpdate();
+                kalmanUpdate();                
 
                 for (size_t i = 0; i < 3; i++)
                 {
                     if ( posVelKalman[i].get_ValidationGate() > kalThres )
                     {
                         setKalmanState(KALMAN_STOPPED);
-                        printMessage(0,"Kalman filter #%i overcome the validationGate. Stopping.\n",i);
+                        printMessage(0,"Kalman filter #%i overcomes the validationGate. Stopping.\n",i);
                     }
                 }
-            }
+            }            
 
-            // If there's no data below a certain threshold, stop the kalman stuff
             if ( yarp::os::Time::now() - timeNow > noDataThres)
             {
                 setKalmanState(KALMAN_STOPPED);
                 printMessage(0,"Kalman filter has been stopped for lack of fresh data.\n");
             }
+
+            setKalmanOutput();
         }
     }
 }
@@ -84,9 +84,7 @@ bool kalmanThread::kalmanUpdate()
     {
         for (size_t i = 0; i < 3; i++)
         {
-            Vector in(1,0.0);
-            in(0)=input(i);
-            posVelKalman[i].correct(in);
+            posVelKalman[i].correct(Vector(1,input(i)));
         }
     }
 
@@ -130,8 +128,7 @@ bool kalmanThread::setKalmanOutput()
     outMutex.lock();
         for (size_t i = 0; i < 3; i++)
         {
-            Vector output(kalOrder,0.0);
-            output = posVelKalman[i].get_y();
+            Vector output = posVelKalman[i].get_y();
             kalOut(i) = output(0);
         }
     outMutex.unlock();
