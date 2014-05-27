@@ -111,12 +111,12 @@ public:
     /**
     * Initialize the kalman filter. This triggers the state to KALMAN_NORMAL.
     **/
-    bool kalmanInit(const Vector inVec);
+    bool kalmanInit(const Vector &inVec);
 
     /**
     * Sets the new input measurement. This triggers the state to KALMAN_NEWINPUT.
     **/
-    bool setKalmanInput(const Vector inVec);
+    bool setKalmanInput(const Vector &inVec);
 
     /**
     * Gets the latest data. This triggers the state to become KALMAN_NOINPUT.

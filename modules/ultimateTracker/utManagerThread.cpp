@@ -35,6 +35,8 @@ bool utManagerThread::threadInit()
 
 void utManagerThread::run()
 {
+    int kalState = -1;
+
     switch (stateFlag)
     {
         case 0:
@@ -42,18 +44,22 @@ void utManagerThread::run()
             timeNow = yarp::os::Time::now();
             oldMcutPoss.clear();
             stateFlag++;
+            deleteGuiTarget();
             break;
         case 1:
-            // state #01: check the motionCUT and see if there's something interesting
+            // state #01: check the motionCUT and see if there's something interesting.
+            // if so, initialize the tracker, and step up.
             if (processMotion())
             {
-                printMessage(0,"Initializing tracker\n");
+                printMessage(0,"Initializing tracker...\n");
                 timeNow = yarp::os::Time::now();
                 initializeTracker();
                 stateFlag++;
             }
             break;
         case 2:
+            // state #02: read data from the Tracker and use the SFM to retrieve a 3D point.
+            // with that, initialize the kalman filter, and then step up.
             readFromTracker();
             if (getPointFromStereo())
             {
@@ -67,13 +73,13 @@ void utManagerThread::run()
             readFromTracker();
             if (getPointFromStereo())
             {
-                kalThrd -> getKalmanOutput(kalOut);
-                manageiCubGui();
+                kalThrd -> setKalmanInput(SFMPos);
             }
-            int kalState;
-            if (kalThrd -> getKalmanState(kalState) && kalState == KALMAN_STOPPED)
+            
+            kalThrd -> getKalmanState(kalState);
+            if (kalState == KALMAN_STOPPED)
             {
-                printMessage(0,"For some reasons, the kalman filters stopped. Going back to initial state.");
+                printMessage(0,"For some reasons, the kalman filters stopped. Going back to initial state.\n");
                 stateFlag = 0;
             }
             break;
@@ -82,7 +88,10 @@ void utManagerThread::run()
             Time::delay(1);
             break;
     }
-    printMessage(1,"stateFlag %i kalmanPos: %s\n",stateFlag,kalOut.toString().c_str());
+    
+    kalThrd -> getKalmanOutput(kalOut);
+    manageiCubGui();
+    printMessage(1,"stateFlag %i kalState %i kalmanPos: %s\n",stateFlag,kalState,kalOut.toString().c_str());
 }
 
 bool utManagerThread::manageKalman()
@@ -104,9 +113,9 @@ bool utManagerThread::manageiCubGui()
         obj.addDouble(50.0);
     
         // positions
-        obj.addDouble(1000.0*SFMPos[0]);
-        obj.addDouble(1000.0*SFMPos[1]);
-        obj.addDouble(1000.0*SFMPos[2]);
+        obj.addDouble(1000.0*kalOut[0]);
+        obj.addDouble(1000.0*kalOut[1]);
+        obj.addDouble(1000.0*kalOut[2]);
     
         // orientation
         obj.addDouble(0.0);
@@ -154,6 +163,7 @@ bool utManagerThread::processMotion()
         }
     }
     
+    // printf("asdfasdfa\n");
     if (noInput())
     {
         timeNow = yarp::os::Time::now();

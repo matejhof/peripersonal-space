@@ -47,29 +47,30 @@ void kalmanThread::run()
 
     if (getKalmanState(kS))
     {
-        if ( kS == KALMAN_NEWINPUT )
-        {
-            kalmanUpdate();
-        }
-
-        if ( kS == KALMAN_NORMAL || kS == KALMAN_NOINPUT )
+        if ( kS == KALMAN_NORMAL || kS == KALMAN_NOINPUT || kS == KALMAN_NEWINPUT )
         {
             kalmanPredict();
             setKalmanOutput();
+
+            if ( kS == KALMAN_NEWINPUT )
+            {
+                kalmanUpdate();
+
+                for (size_t i = 0; i < 3; i++)
+                {
+                    if ( posVelKalman[i].get_ValidationGate() > kalThres )
+                    {
+                        setKalmanState(KALMAN_STOPPED);
+                        printMessage(0,"Kalman filter #%i overcome the validationGate. Stopping.\n",i);
+                    }
+                }
+            }
+
             // If there's no data below a certain threshold, stop the kalman stuff
-            if ( timeNow - yarp::os::Time::now() > noDataThres)
+            if ( yarp::os::Time::now() - timeNow > noDataThres)
             {
                 setKalmanState(KALMAN_STOPPED);
                 printMessage(0,"Kalman filter has been stopped for lack of fresh data.\n");
-            }
-
-            for (size_t i = 0; i < 3; i++)
-            {
-                if ( posVelKalman[i].get_ValidationGate() > kalThres )
-                {
-                    setKalmanState(KALMAN_STOPPED);
-                    printMessage(0,"Kalman filter #%i overcome the validationGate. Stopping.\n",i);
-                }
             }
         }
     }
@@ -88,6 +89,8 @@ bool kalmanThread::kalmanUpdate()
             posVelKalman[i].correct(in);
         }
     }
+
+    return true;
 }
 
 bool kalmanThread::kalmanPredict()
@@ -96,9 +99,11 @@ bool kalmanThread::kalmanPredict()
     {
         posVelKalman[i].predict();
     }
+
+    return true;
 }
 
-bool kalmanThread::kalmanInit(const Vector inVec)
+bool kalmanThread::kalmanInit(const Vector &inVec)
 {
     int kS=-1;
 
@@ -107,7 +112,7 @@ bool kalmanThread::kalmanInit(const Vector inVec)
         for (size_t i = 0; i < 3; i++)
         {
             Vector x0(kalOrder,0.0);
-            x0(0) = inVec(0);
+            x0(0) = inVec(i);
             posVelKalman[i].init(x0,kalP);
         }
         setKalmanState(KALMAN_NOINPUT);
@@ -116,6 +121,7 @@ bool kalmanThread::kalmanInit(const Vector inVec)
     else
         return false;
 
+    printMessage(0,"Kalman filter initialized.\n");
     return true;
 }
 
@@ -142,12 +148,18 @@ bool kalmanThread::getKalmanOutput(Vector &e)
     return true;
 }
 
-bool kalmanThread::setKalmanInput(const Vector inVec)
+bool kalmanThread::setKalmanInput(const Vector &inVec)
 {
     inputMutex.lock();
-        kalIn = inVec;
-        setKalmanState(KALMAN_NEWINPUT);
+
+        int kS=-1;
+        if (getKalmanState(kS) && kS!=KALMAN_STOPPED)
+        {
+            kalIn = inVec;
+            setKalmanState(KALMAN_NEWINPUT);
+        }
         timeNow = yarp::os::Time::now();
+
     inputMutex.unlock();
 
     return true;

@@ -366,7 +366,7 @@ void vtRFThread::run()
         }
     }
     // if there's no input for more than 2 seconds, clear the buffer
-    else if (yarp::os::Time::now() - timeNow > 2)
+    else if (yarp::os::Time::now() - timeNow > 2.0)
     {
         eventsFlag = true;
         eventsBuffer.clear();
