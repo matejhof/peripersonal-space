@@ -65,24 +65,13 @@ Linux (Ubuntu 12.04, Debian Squeeze, Debian Wheezy).
 */ 
 
 #include <yarp/os/all.h>
-
-#include <yarp/sig/Vector.h>
-#include <yarp/sig/Matrix.h>
-
-#include <yarp/math/Math.h>
-
-#include <iostream>
 #include <string> 
 
 #include "ultimateTrackerThread.h"
-
-YARP_DECLARE_DEVICES(icubmod)
+#include "kalmanThread.h"
 
 using namespace yarp;
 using namespace yarp::os;
-using namespace yarp::sig;
-using namespace yarp::math;
-
 using namespace std;
 
 /**
@@ -95,12 +84,13 @@ class ultimateTracker: public RFModule
 {
 private:
     ultimateTrackerThread *ultTrckrThrd;
+    kalmanThread          *kalThrd;
 
     RpcClient             rpcClnt;
     RpcServer             rpcSrvr;
 
     string robot,name;
-    int verbosity,rate;
+    int verbosity,wrapperRate,kalmanRate,timeThres;
 
 public:
     ultimateTracker()
@@ -146,8 +136,10 @@ public:
         name  = "ultimateTracker";
         robot = "icub";
 
-        verbosity  = 0;      // verbosity
-        rate       = 20;    // rate of the ultimateTrackerThread
+        verbosity   = 0;        // verbosity
+        wrapperRate = 20;       // rate of the ultimateTrackerThread [ms]
+        kalmanRate  = 10;       // rate of the kalmanThread [ms]
+        timeThres   = 100;      // time threshold for the kalman thread [ms]
 
         //******************************************************
         //********************** CONFIGS ***********************
@@ -179,18 +171,48 @@ public:
             else cout << "Could not find verbosity option in " <<
                          "config file; using "<< verbosity <<" as default\n";
 
-        //****************** rate ******************
-            if (rf.check("rate"))
+        //****************** wrapperRate ******************
+            if (rf.check("wrapperRate"))
             {
-                rate = rf.find("rate").asInt();
-                cout << "ultimateTrackerThread rateThread working at " << rate << " ms\n";
+                wrapperRate = rf.find("wrapperRate").asInt();
+                cout << "ultimateTrackerThread wrapperRateThread working at " << wrapperRate << " ms\n";
             }
-            else cout << "Could not find rate in the config file; using "
-                      << rate << " ms as default\n";
+            else cout << "Could not find wrapperRate in the config file; using "
+                      << wrapperRate << " ms as default\n";
+
+        //****************** kalmanRate ******************
+            if (rf.check("kalmanRate"))
+            {
+                kalmanRate = rf.find("kalmanRate").asInt();
+                cout << "ultimateTrackerThread kalmanRateThread working at " << kalmanRate << " ms\n";
+            }
+            else cout << "Could not find kalmanRate in the config file; using "
+                      << kalmanRate << " ms as default\n";
+
+        //****************** timeThres ******************
+            if (rf.check("timeThres"))
+            {
+                timeThres = rf.find("timeThres").asInt();
+                cout << "ultimateTrackerThread timeThresThread working at " << timeThres << " ms\n";
+            }
+            else cout << "Could not find timeThres in the config file; using "
+                      << timeThres << " ms as default\n";
 
         //******************************************************
-        //*********************** THREAD **********************
-            ultTrckrThrd = new ultimateTrackerThread(rate, name, robot, verbosity);
+        //*********************** THREADS **********************
+            string kalThrdName = name + "/Kalman";
+            kalThrd = new kalmanThread(kalmanRate, kalThrdName, robot, verbosity, timeThres);
+            if (!kalThrd -> start())
+            {
+                delete kalThrd;
+                kalThrd = 0;
+                cout << "\nERROR!!! kalmanThread wasn't instantiated!!\n";
+                return false;
+            }
+            cout << "ULTIMATE TRACKER: kalmanThread istantiated...\n";
+
+            string ultTrckrThrdName = name + "/Wrapper";
+            ultTrckrThrd = new ultimateTrackerThread(wrapperRate, ultTrckrThrdName, robot, verbosity,kalThrd);
             if (!ultTrckrThrd -> start())
             {
                 delete ultTrckrThrd;
@@ -211,12 +233,19 @@ public:
 
     bool close()
     {
-        cout << "ULTIMATE TRACKER: Stopping thread.." << endl;
+        cout << "ULTIMATE TRACKER: Stopping threads.." << endl;
         if (ultTrckrThrd)
         {
-            ultTrckrThrd->stop();
+            ultTrckrThrd -> stop();
             delete ultTrckrThrd;
-            ultTrckrThrd=0;
+            ultTrckrThrd =  0;
+        }
+
+        if (kalThrd)
+        {
+            kalThrd -> stop();
+            delete kalThrd;
+            kalThrd =  0;
         }
         return true;
     }
@@ -237,8 +266,6 @@ public:
 */
 int main(int argc, char * argv[])
 {
-    YARP_REGISTER_DEVICES(icubmod)
-
     ResourceFinder moduleRF;
     moduleRF.setVerbose(false);
     moduleRF.setDefaultContext("periPersonalSpace");
@@ -248,13 +275,14 @@ int main(int argc, char * argv[])
     if (moduleRF.check("help"))
     {    
         cout << endl << "Options:" << endl;
-        cout << "   --context    path:   where to find the called resource (default periPersonalSpace)." << endl;
-        cout << "   --from       from:   the name of the .ini file (default ultimateTracker.ini)." << endl;
-        cout << "   --name       name:   the name of the module (default ultimateTracker)." << endl;
-        cout << "   --robot      robot:  the name of the robot. Default icub." << endl;
-        cout << "   --rate       rate:   the period used by the thread. Default 50ms." << endl;
-        cout << "   --verbosity  int:    verbosity level (default 0)." << endl;
-        cout << "   --taxelsFile string: the file from which load and save taxels (default taxels2D.ini)." << endl;
+        cout << "   --context     path:  where to find the called resource (default periPersonalSpace)." << endl;
+        cout << "   --from        from:  the name of the .ini file (default ultimateTracker.ini)." << endl;
+        cout << "   --name        name:  the name of the module (default ultimateTracker)." << endl;
+        cout << "   --robot       robot: the name of the robot. Default icub." << endl;
+        cout << "   --verbosity   int:   verbosity level (default 0)." << endl;
+        cout << "   --wrapperRate int:   the period used by the wrapper thread. Default 20ms." << endl;
+        cout << "   --kalmanRate  int:   the period used by the kalman  thread. Default 10ms." << endl;
+        cout << "   --timeThres   int:   the threshold after which the kalman gets stoppe. Default 100ms." << endl;
         cout << endl;
         return 0;
     }

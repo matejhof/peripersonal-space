@@ -1,22 +1,11 @@
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <time.h>
-#include <stdio.h>
-#include <iomanip>
-
 #include "ultimateTrackerThread.h"
 
-#define KALMAN_INIT     0
-#define KALMAN_NORMAL   1
-#define KALMAN_NOINPUT  2
-#define KALMAN_NEWDATA  3
-
-ultimateTrackerThread::ultimateTrackerThread(int _rate, const string &_name, const string &_robot, int _v) :
+ultimateTrackerThread::ultimateTrackerThread(int _rate, const string &_name, const string &_robot, int _v, kalmanThread *_kT) :
                        RateThread(_rate), name(_name), robot(_robot), verbosity(_v)
 {
+    kalThrd   = _kT;
     stateFlag = 0;
-    timeNow = yarp::os::Time::now();
+    timeNow   = yarp::os::Time::now();
 
     motionCUTBlobs = new BufferedPort<Bottle>;
     motionCUTPos.resize(2,0.0);
@@ -25,36 +14,6 @@ ultimateTrackerThread::ultimateTrackerThread(int _rate, const string &_name, con
     templatePFTrackerPos.resize(2,0.0);
 
     SFMPos.resize(3,0.0);
-
-    kalState  = KALMAN_INIT;
-    kalOrder  = 4;
-    kalEst.resize(kalOrder,0.0);
-    kalEstPos.resize(3,0.0);
-    kalTs     = 0.1;
-    kalClock  = 0.0;
-    kalA      = eye(kalOrder);
-    kalA(0,1) = 0.01;
-    kalA(0,2) = 0.0001;
-    kalA(1,2) = 0.01;
-    kalA(1,3) = 0.0001;
-    kalA(2,3) = 0.01;
-
-    kalH      = zeros(1,kalOrder);
-    kalH(0,0) = 1;
-
-    kalQ = 0.00001 * eye(kalOrder);
-    kalP = 0.00001 * eye(kalOrder);
-
-    // Threshold is set to chi2inv(0.95,1)
-    kalThres = 3.8415;
-
-    kalR      = eye(1);
-    kalR(0,0) = 0.01;
-
-    for (int i = 0; i < 3; i++)
-    {
-        posVelKalman.push_back(Kalman(kalA,kalH,kalQ,kalR));
-    }
 }
 
 bool ultimateTrackerThread::threadInit()
@@ -81,7 +40,6 @@ void ultimateTrackerThread::run()
             timeNow = yarp::os::Time::now();
             oldMcutPoss.clear();
             stateFlag++;
-            kalClock=0.0;
             break;
         case 1:
             // state #01: check the motionCUT and see if there's something interesting
@@ -98,7 +56,6 @@ void ultimateTrackerThread::run()
             if (getPointFromStereo())
             {
                 printMessage(0,"Initializing Kalman filter...\n");
-                manageKalman();
                 stateFlag++;
             }
             break;
@@ -107,73 +64,20 @@ void ultimateTrackerThread::run()
             readFromTracker();
             if (getPointFromStereo())
             {
-                kalState    == KALMAN_NEWDATA;
-                kalEstPos == manageKalman();
                 manageiCubGui();
             }
-            else
-                manageKalman();
             break;
         default:
             printMessage(0,"ERROR!!! ultimateTrackerThread should never be here!!!\nState: %d\n",stateFlag);
             Time::delay(1);
             break;
     }
-    kalClock += kalTs;
-    printMessage(1,"stateFlag %i kalmanPos: %s\n",stateFlag,kalEstPos.toString().c_str());
+    printMessage(1,"stateFlag %i kalmanPos: \n",stateFlag);
 }
 
-Vector ultimateTrackerThread::manageKalman()
+bool ultimateTrackerThread::manageKalman()
 {
-    Vector res(3,-1.0);
-    // If init is equal to 0, the filter has to be initialized
-    if (kalState == KALMAN_INIT)
-    {
-        for (int i = 0; i < 3; i++)
-        {
-            Vector state0(1,SFMPos(i));
-            kalClock = 0.0;
-            posVelKalman[i].init(state0,kalP);
-            // currEst  = posVelKalman(i).filt(SFMPos(i));
-            // res(i)   = currEst(0);
-            // res(2+i) = currEst(1);
-        }
-    }
-    // If init==1 (i.e. I've got a new data) and kalClock>=kalTs (i.e.
-    // the filter did a new step), let's correct the current estimation
-    // with the new measurement
-    else if (kalState == KALMAN_NEWDATA)
-    {
-        for (int i = 0; i < 3; i++)
-        {
-            Vector measurement(1,SFMPos(i));
-            posVelKalman[i].correct(measurement);
-
-            // After correction, let's check if the validationGate has overcome the threshold.
-            // If this is the case, let's go back to the initial state.
-            if ( posVelKalman[i].get_ValidationGate() > kalThres )
-            {
-                printMessage(0,"Validation Gate for kalman #%i has been overcome! Returning to initial state.",i);
-                stateFlag = 0;
-                kalState = KALMAN_INIT;
-                return res;
-            }
-        }
-        kalState == KALMAN_NOINPUT;
-    }
-
-    if (kalState != KALMAN_INIT)
-    {
-        Vector prediction;
-        for (int i = 0; i < 3; i++)
-        {
-            Vector input(1,0.0);
-            prediction = posVelKalman[i].predict(input);
-            res(i) = prediction(0);
-        }
-    }
-
-    return res;
+    return true;
 }
 
 bool ultimateTrackerThread::manageiCubGui()

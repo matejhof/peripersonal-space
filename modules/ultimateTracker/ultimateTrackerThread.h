@@ -19,50 +19,24 @@
  * the affected taxel.
 */
 
-#ifndef __VTRFTHREAD_H__
-#define __VTRFTHREAD_H__
+#ifndef __ULTTRACKERTHREAD_H__
+#define __ULTTRACKERTHREAD_H__
 
 #include <yarp/os/all.h>
-
 #include <yarp/sig/Vector.h>
 #include <yarp/sig/Matrix.h>
-
 #include <yarp/math/Math.h>
-
-#include <yarp/dev/PolyDriver.h>
-#include <yarp/dev/CartesianControl.h>
-#include <yarp/dev/Drivers.h>
-#include <yarp/dev/all.h>
-
-#include <gsl/gsl_math.h>
-
-#include <iCub/iKin/iKinFwd.h>
 
 #include <iostream>
 #include <string>
-#include <stdio.h>
-#include <stdarg.h>
 #include <vector>
-#include <set>
-#include <list>
 
-#include <cv.h>
-#include <highgui.h>
-#include <iCub/ctrl/math.h>
-#include <iCub/ctrl/kalman.h>
 #include <iCub/periPersonalSpace/utils.h>
-#include <iCub/skinDynLib/skinContact.h>
-#include <iCub/skinDynLib/skinContactList.h>
-
-YARP_DECLARE_DEVICES(icubmod)
+#include "kalmanThread.h"
 
 using namespace yarp;
-using namespace yarp::os;
 using namespace yarp::sig;
 using namespace yarp::math;
-using namespace yarp::dev;
-using namespace iCub::iKin;
-using namespace iCub::ctrl;
 
 using namespace std;
 
@@ -80,22 +54,10 @@ protected:
 
     /***************************************************************************/
     // INTERNAL VARIABLES:
+    kalmanThread          *kalThrd;     // Pointer to the kalmanThread in order to access its data.
+
     int    stateFlag;
     double timeNow;
-
-    vector <iCub::ctrl::Kalman> posVelKalman;
-    int    kalOrder;
-    int    kalState;
-    double kalTs;
-    double kalClock;
-    Vector kalEstPos;
-    Vector kalEst;
-    double kalThres;
-    Matrix kalA;
-    Matrix kalH;
-    Matrix kalQ;
-    Matrix kalR;
-    Matrix kalP;
 
     BufferedPort<Bottle>       *motionCUTBlobs;  // port for reading from motionCUT
     Bottle                     *motionCUTBottle; // bottle used for the port
@@ -128,7 +90,7 @@ protected:
 
     bool getPointFromStereo();
 
-    Vector manageKalman();
+    bool manageKalman();
 
     bool manageiCubGui();
 
@@ -141,7 +103,7 @@ protected:
     
 public:
     // CONSTRUCTOR
-    ultimateTrackerThread(int _rate, const string &_name, const string &_robot, int _v);
+    ultimateTrackerThread(int _rate, const string &_name, const string &_robot, int _v, kalmanThread *_kT);
     // INIT
     virtual bool threadInit();
     // RUN
