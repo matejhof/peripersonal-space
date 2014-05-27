@@ -4,6 +4,7 @@ utManagerThread::utManagerThread(int _rate, const string &_name, const string &_
                        RateThread(_rate), name(_name), robot(_robot), verbosity(_v)
 {
     kalThrd   = _kT;
+
     stateFlag = 0;
     timeNow   = yarp::os::Time::now();
 
@@ -14,6 +15,7 @@ utManagerThread::utManagerThread(int _rate, const string &_name, const string &_
     templatePFTrackerPos.resize(2,0.0);
 
     SFMPos.resize(3,0.0);
+    kalOut.resize(3,0.0);
 }
 
 bool utManagerThread::threadInit()
@@ -56,6 +58,7 @@ void utManagerThread::run()
             if (getPointFromStereo())
             {
                 printMessage(0,"Initializing Kalman filter...\n");
+                kalThrd -> kalmanInit(SFMPos);
                 stateFlag++;
             }
             break;
@@ -64,7 +67,14 @@ void utManagerThread::run()
             readFromTracker();
             if (getPointFromStereo())
             {
+                kalThrd -> getKalmanOutput(kalOut);
                 manageiCubGui();
+            }
+            int kalState;
+            if (kalThrd -> getKalmanState(kalState) && kalState == KALMAN_STOPPED)
+            {
+                printMessage(0,"For some reasons, the kalman filters stopped. Going back to initial state.");
+                stateFlag = 0;
             }
             break;
         default:
@@ -72,7 +82,7 @@ void utManagerThread::run()
             Time::delay(1);
             break;
     }
-    printMessage(1,"stateFlag %i kalmanPos: \n",stateFlag);
+    printMessage(1,"stateFlag %i kalmanPos: %s\n",stateFlag,kalOut.toString().c_str());
 }
 
 bool utManagerThread::manageKalman()
@@ -267,7 +277,7 @@ void utManagerThread::deleteGuiTarget()
 void utManagerThread::threadRelease()
 {
     printMessage(0,"Deleting target from the iCubGui..\n");
-        deleteGuiTarget()
+        deleteGuiTarget();
 
     printMessage(0,"Closing ports..\n");
         closePort(motionCUTBlobs);

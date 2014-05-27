@@ -30,7 +30,7 @@ kalmanThread::kalmanThread(int _rate, const string &_name, const string &_robot,
     kalR      = eye(1);
     kalR(0,0) = 0.01;
 
-    for (int i = 0; i < 3; i++)
+    for (size_t i = 0; i < 3; i++)
     {
         posVelKalman.push_back(Kalman(kalA,kalH,kalQ,kalR));
     }
@@ -60,7 +60,16 @@ void kalmanThread::run()
             if ( timeNow - yarp::os::Time::now() > noDataThres)
             {
                 setKalmanState(KALMAN_STOPPED);
-                printMessage(0,"Kalman filter has been stopped for lack of fresh data.");
+                printMessage(0,"Kalman filter has been stopped for lack of fresh data.\n");
+            }
+
+            for (size_t i = 0; i < 3; i++)
+            {
+                if ( posVelKalman[i].get_ValidationGate() > kalThres )
+                {
+                    setKalmanState(KALMAN_STOPPED);
+                    printMessage(0,"Kalman filter #%i overcome the validationGate. Stopping.\n",i);
+                }
             }
         }
     }
@@ -72,7 +81,7 @@ bool kalmanThread::kalmanUpdate()
 
     if (getKalmanInput(input))
     {
-        for (int i = 0; i < 3; i++)
+        for (size_t i = 0; i < 3; i++)
         {
             Vector in(1,0.0);
             in(0)=input(i);
@@ -83,7 +92,7 @@ bool kalmanThread::kalmanUpdate()
 
 bool kalmanThread::kalmanPredict()
 {
-    for (int i = 0; i < 3; i++)
+    for (size_t i = 0; i < 3; i++)
     {
         posVelKalman[i].predict();
     }
@@ -95,7 +104,7 @@ bool kalmanThread::kalmanInit(const Vector inVec)
 
     if (getKalmanState(kS) && kS == KALMAN_INIT)
     {
-        for (int i = 0; i < 3; i++)
+        for (size_t i = 0; i < 3; i++)
         {
             Vector x0(kalOrder,0.0);
             x0(0) = inVec(0);
@@ -113,7 +122,7 @@ bool kalmanThread::kalmanInit(const Vector inVec)
 bool kalmanThread::setKalmanOutput()
 {
     outMutex.lock();
-        for (int i = 0; i < 3; i++)
+        for (size_t i = 0; i < 3; i++)
         {
             Vector output(kalOrder,0.0);
             output = posVelKalman[i].get_y();

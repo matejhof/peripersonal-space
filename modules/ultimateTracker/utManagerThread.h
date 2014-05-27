@@ -73,6 +73,8 @@ protected:
 
     Port outPortGui;
 
+    Vector    kalOut;
+
     bool noInput();
 
     bool processMotion();
