@@ -72,6 +72,7 @@ protected:
     Vector    SFMPos;
 
     Port outPortGui;
+    Port outPortEvents;
 
     Vector    kalOut;
 
@@ -97,6 +98,8 @@ protected:
     bool manageiCubGui();
 
     void deleteGuiTarget();
+
+    void sendData();
 
     /**
     * Prints a message according to the verbosity level:

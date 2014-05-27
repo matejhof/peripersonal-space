@@ -24,11 +24,13 @@ bool utManagerThread::threadInit()
     templatePFTrackerTarget -> open(("/"+name+"/pfTracker:i").c_str());
     SFMrpcPort.open(("/"+name+"/SFM:o").c_str());
     outPortGui.open(("/"+name+"/gui:o").c_str());
+    outPortEvents.open(("/"+name+"/events:o").c_str());
 
     Network::connect("/motionCUT/blobs:o",("/"+name+"/mCUT:i").c_str());
     Network::connect("/templatePFTracker/target:o",("/"+name+"/pfTracker:i").c_str());
     Network::connect(("/"+name+"/SFM:o").c_str(),"/SFM/rpc");
     Network::connect(("/"+name+"/gui:o").c_str(),"/iCubGui/objects");
+    Network::connect(("/"+name+"/events:o").c_str(),"/visuoTactileWrapper/optFlow:i");    
 
     return true;
 }
@@ -93,6 +95,22 @@ void utManagerThread::run()
     kalThrd -> getKalmanOutput(kalOut);
     manageiCubGui();
     printMessage(1,"stateFlag %i kalState %i kalmanPos: %s\n",stateFlag,kalState,kalOut.toString().c_str());
+
+    if (stateFlag == 3)
+    {
+        sendData();
+    }
+}
+
+void utManagerThread::sendData()
+{
+    Bottle b;
+    b.clear();
+    for (size_t i = 0; i < 3; i++)
+    {
+        b.addDouble(kalOut(i));
+    }
+    outPortEvents.write(b);
 }
 
 bool utManagerThread::manageKalman()

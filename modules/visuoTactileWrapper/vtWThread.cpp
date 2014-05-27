@@ -33,7 +33,7 @@ bool vtWThread::threadInit()
     eventsPort.open(("/"+name+"/events:o").c_str());
     depth2kinPort.open(("/"+name+"/depth2kin:o").c_str());
     
-    Network::connect("/optFlow/blobs:o",("/"+name+"/optFlow:i").c_str());
+    Network::connect("/ultimateTracker/Manager/events:o",("/"+name+"/optFlow:i").c_str());
     Network::connect("/pf3dTracker/data:o",("/"+name+"/pf3dTracker:i").c_str());
     Network::connect("/doubleTouch/status:o",("/"+name+"/doubleTouch:i").c_str());
     Network::connect(("/"+name+"/events:o").c_str(),"/visuoTactileRF/events:i");
@@ -120,62 +120,16 @@ void vtWThread::run()
     // process the optFlow
     if (optFlowBottle = optFlowPort.read(false))
     {
-        if (optFlowBottle!=NULL)
+        if (optFlowBottle->size()>3)
         {
             optFlowPos.zero();
-            int maxSize = -1;
-            int blobidx = -1;
-            int size    = -1;
-            Bottle *blob;
+            
+            optFlowPos[0]=optFlowBottle->get(0).asDouble();
+            optFlowPos[1]=optFlowBottle->get(1).asDouble();
+            optFlowPos[2]=optFlowBottle->get(2).asDouble();
 
-            // Let's process the blob with the maximum size
-            blob = optFlowBottle->get(blobidx).asList();
-
-            Vector px(2,0.0);
-            px(0) = blob->get(0).asInt();
-            px(1) = blob->get(1).asInt();
-
-            if (SFMPort.getOutputCount()>0)
-            {
-                Bottle cmd,reply;
-                cmd.addInt(px[0]);
-                cmd.addInt(px[1]);
-
-                SFMPort.write(cmd,reply);
-                optFlowPos[0]=reply.get(1).asDouble();
-                optFlowPos[1]=reply.get(2).asDouble();
-                optFlowPos[2]=reply.get(3).asDouble();
-            }
-            else
-            {
-                // 0 is for the left image
-                // 1 is the distance [m] of the object from the image plane (extended to infinity)
-                igaze->get3DPoint(0,px,1,optFlowPos);
-            }
-
-            if (optFlowPos[0]!=0.0 && optFlowPos[1]!=0.0 && optFlowPos[2]!=0.0)
-            {
-                if (depth2kinPort.getOutputCount()>0)
-                {
-                    Bottle cmd,reply;
-                    cmd.addString("getPoint");
-                    cmd.addString("right");   // TO BE MODIFIED
-                    cmd.addDouble(optFlowPos[0]);
-                    cmd.addDouble(optFlowPos[1]);
-                    cmd.addDouble(optFlowPos[2]);
-
-                    depth2kinPort.write(cmd,reply);
-                    optFlowPos[0]=reply.get(1).asDouble();
-                    optFlowPos[1]=reply.get(2).asDouble();
-                    optFlowPos[2]=reply.get(3).asDouble();
-                }
-
-                AWPolyElement el(optFlowPos,Time::now());
-                optFlowVelEstimate=linEst_optFlow->estimate(el);
-                
-                events.push_back(IncomingEvent(optFlowPos,optFlowVelEstimate,0.05,"optFlow"));
-                isTarget=true;
-            }
+            events.push_back(IncomingEvent(optFlowPos,optFlowVelEstimate,-1.0,"pf3dTracker"));
+            isTarget=true;
         }
     }
 
@@ -209,7 +163,7 @@ void vtWThread::run()
                     AWPolyElement el(pf3dTrackerPos,Time::now());
                     pf3dTrackerVelEstimate=linEst_pf3dTracker->estimate(el);
                     
-                    events.push_back(IncomingEvent(pf3dTrackerPos,pf3dTrackerVelEstimate,0.03,"pf3dTracker"));
+                    events.push_back(IncomingEvent(pf3dTrackerPos,pf3dTrackerVelEstimate,0.05,"pf3dTracker"));
                     isTarget=true;
                 }
             }
