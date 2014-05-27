@@ -67,7 +67,7 @@ Linux (Ubuntu 12.04, Debian Squeeze, Debian Wheezy).
 #include <yarp/os/all.h>
 #include <string> 
 
-#include "ultimateTrackerThread.h"
+#include "utManagerThread.h"
 #include "kalmanThread.h"
 
 using namespace yarp;
@@ -83,19 +83,19 @@ using namespace std;
 class ultimateTracker: public RFModule 
 {
 private:
-    ultimateTrackerThread *ultTrckrThrd;
+    utManagerThread *utMngrThrd;
     kalmanThread          *kalThrd;
 
     RpcClient             rpcClnt;
     RpcServer             rpcSrvr;
 
     string robot,name;
-    int verbosity,wrapperRate,kalmanRate,timeThres;
+    int verbosity,managerRate,kalmanRate,timeThres;
 
 public:
     ultimateTracker()
     {
-        ultTrckrThrd    = 0;
+        utMngrThrd    = 0;
     }
 
     bool respond(const Bottle &command, Bottle &reply)
@@ -111,7 +111,7 @@ public:
                 case VOCAB4('s','a','v','e'):
                 {
                     // int res=Vocab::encode("saved");
-                    // if (ultTrckrThrd -> save())
+                    // if (utMngrThrd -> save())
                     // {
                     //     reply.addVocab(ack);
                     // }
@@ -137,7 +137,7 @@ public:
         robot = "icub";
 
         verbosity   = 0;        // verbosity
-        wrapperRate = 20;       // rate of the ultimateTrackerThread [ms]
+        managerRate = 20;       // rate of the utManagerThread [ms]
         kalmanRate  = 10;       // rate of the kalmanThread [ms]
         timeThres   = 100;      // time threshold for the kalman thread [ms]
 
@@ -166,25 +166,25 @@ public:
             if (rf.check("verbosity"))
             {
                 verbosity = rf.find("verbosity").asInt();
-                cout << "ultimateTrackerThread verbosity set to " << verbosity << endl;
+                cout << "utManagerThread verbosity set to " << verbosity << endl;
             }
             else cout << "Could not find verbosity option in " <<
                          "config file; using "<< verbosity <<" as default\n";
 
-        //****************** wrapperRate ******************
-            if (rf.check("wrapperRate"))
+        //****************** managerRate ******************
+            if (rf.check("managerRate"))
             {
-                wrapperRate = rf.find("wrapperRate").asInt();
-                cout << "ultimateTrackerThread wrapperRateThread working at " << wrapperRate << " ms\n";
+                managerRate = rf.find("managerRate").asInt();
+                cout << "utManagerThread managerRateThread working at " << managerRate << " ms\n";
             }
-            else cout << "Could not find wrapperRate in the config file; using "
-                      << wrapperRate << " ms as default\n";
+            else cout << "Could not find managerRate in the config file; using "
+                      << managerRate << " ms as default\n";
 
         //****************** kalmanRate ******************
             if (rf.check("kalmanRate"))
             {
                 kalmanRate = rf.find("kalmanRate").asInt();
-                cout << "ultimateTrackerThread kalmanRateThread working at " << kalmanRate << " ms\n";
+                cout << "utManagerThread kalmanRateThread working at " << kalmanRate << " ms\n";
             }
             else cout << "Could not find kalmanRate in the config file; using "
                       << kalmanRate << " ms as default\n";
@@ -193,7 +193,7 @@ public:
             if (rf.check("timeThres"))
             {
                 timeThres = rf.find("timeThres").asInt();
-                cout << "ultimateTrackerThread timeThresThread working at " << timeThres << " ms\n";
+                cout << "utManagerThread timeThresThread working at " << timeThres << " ms\n";
             }
             else cout << "Could not find timeThres in the config file; using "
                       << timeThres << " ms as default\n";
@@ -211,16 +211,16 @@ public:
             }
             cout << "ULTIMATE TRACKER: kalmanThread istantiated...\n";
 
-            string ultTrckrThrdName = name + "/Wrapper";
-            ultTrckrThrd = new ultimateTrackerThread(wrapperRate, ultTrckrThrdName, robot, verbosity,kalThrd);
-            if (!ultTrckrThrd -> start())
+            string managerThrdName = name + "/Manager";
+            utMngrThrd = new utManagerThread(managerRate, managerThrdName, robot, verbosity,kalThrd);
+            if (!utMngrThrd -> start())
             {
-                delete ultTrckrThrd;
-                ultTrckrThrd = 0;
-                cout << "\nERROR!!! ultimateTrackerThread wasn't instantiated!!\n";
+                delete utMngrThrd;
+                utMngrThrd = 0;
+                cout << "\nERROR!!! utManagerThread wasn't instantiated!!\n";
                 return false;
             }
-            cout << "ULTIMATE TRACKER: ultimateTrackerThread istantiated...\n";
+            cout << "ULTIMATE TRACKER: utManagerThread istantiated...\n";
 
         //******************************************************
         //************************ PORTS ***********************
@@ -234,11 +234,11 @@ public:
     bool close()
     {
         cout << "ULTIMATE TRACKER: Stopping threads.." << endl;
-        if (ultTrckrThrd)
+        if (utMngrThrd)
         {
-            ultTrckrThrd -> stop();
-            delete ultTrckrThrd;
-            ultTrckrThrd =  0;
+            utMngrThrd -> stop();
+            delete utMngrThrd;
+            utMngrThrd =  0;
         }
 
         if (kalThrd)
@@ -280,7 +280,7 @@ int main(int argc, char * argv[])
         cout << "   --name        name:  the name of the module (default ultimateTracker)." << endl;
         cout << "   --robot       robot: the name of the robot. Default icub." << endl;
         cout << "   --verbosity   int:   verbosity level (default 0)." << endl;
-        cout << "   --wrapperRate int:   the period used by the wrapper thread. Default 20ms." << endl;
+        cout << "   --managerRate int:   the period used by the manager thread. Default 20ms." << endl;
         cout << "   --kalmanRate  int:   the period used by the kalman  thread. Default 10ms." << endl;
         cout << "   --timeThres   int:   the threshold after which the kalman gets stoppe. Default 100ms." << endl;
         cout << endl;
