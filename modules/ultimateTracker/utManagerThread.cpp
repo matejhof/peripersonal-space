@@ -64,6 +64,7 @@ void utManagerThread::run()
             if (getPointFromStereo())
             {
                 printMessage(0,"Initializing Kalman filter...\n");
+                kalThrd -> setKalmanState(KALMAN_INIT);
                 kalThrd -> kalmanInit(SFMPos);
                 stateFlag++;
             }
