@@ -536,7 +536,7 @@ void doubleTouchThread::delay(int sec)
     }
 }
 
-bool doubleTouchThread::handleGaze()
+void doubleTouchThread::handleGaze()
 {
     // if (step == 0 || step == 1 || step == 8) {
     //   Vector ang(3,0.0);

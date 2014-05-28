@@ -81,9 +81,7 @@ protected:
     bool processMotion();
 
     /**
-    * Checks the stability of the motionCUT's blob center. It returns true if 
-    * there are at least 10 past events and the new sample differs from the past average
-    * for less than 1 pixel on the u axis and 1 on the v axis
+    * Checks the stability of the motionCUT's blob center. 
     **/
     bool stabilityCheck();
 
@@ -95,7 +93,7 @@ protected:
 
     bool manageKalman();
 
-    bool manageiCubGui();
+    void manageiCubGui();
 
     void deleteGuiTarget();
 

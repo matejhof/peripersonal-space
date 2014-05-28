@@ -118,7 +118,7 @@ bool utManagerThread::manageKalman()
     return true;
 }
 
-bool utManagerThread::manageiCubGui()
+void utManagerThread::manageiCubGui()
 {
     if (outPortGui.getOutputCount()>0)
     {
@@ -193,27 +193,33 @@ bool utManagerThread::processMotion()
 
 bool utManagerThread::stabilityCheck()
 {
-    oldMcutPoss.push_back(motionCUTPos);
+    oldMcutPoss.push_back(motionCUTPos);    
 
     if (oldMcutPoss.size()>20)
     {
-        oldMcutPoss.erase(oldMcutPoss.begin());  //remove first element
-        Vector avgPos(2,0.0);
+        // keep the buffer size constant
+        oldMcutPoss.erase(oldMcutPoss.begin());
 
-        for (int i = 0; i < oldMcutPoss.size(); i++)
-        {
-            avgPos(0) += oldMcutPoss[i](0);
-            avgPos(1) += oldMcutPoss[i](1);
-        }
-        avgPos = avgPos/oldMcutPoss.size();
+        Vector mean(2,0.0);
+        Vector stdev(2,0.0);
 
-        if (motionCUTPos(0)-avgPos(0)<1.0 && motionCUTPos(1)-avgPos(1)<1.0)
+        // find mean and standard deviation
+        for (size_t i=0; i<oldMcutPoss.size(); i++)
         {
-            return true;
+            mean+=oldMcutPoss[i];
+            stdev+=oldMcutPoss[i]*oldMcutPoss[i];
         }
-        else
-            oldMcutPoss.clear();
+
+        mean/=oldMcutPoss.size();
+        stdev=stdev/oldMcutPoss.size()-mean*mean;
+        stdev(0)=sqrt(stdev(0));
+        stdev(1)=sqrt(stdev(1));
+
+        // if samples are mostly lying around the mean
+        if ((2.0*stdev(0)<10.0) && (2.0*stdev(1)<10.0))
+            return true; 
     }
+
     return false;
 }
 

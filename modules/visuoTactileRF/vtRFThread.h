@@ -329,7 +329,7 @@ public:
     /**
     * It resets the learning
     **/
-    bool resetParzenWindows();
+    void resetParzenWindows();
 
     /**
     * It stops the learning

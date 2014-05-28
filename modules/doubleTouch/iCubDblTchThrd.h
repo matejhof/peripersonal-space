@@ -213,7 +213,7 @@ protected:
     /**
     * Handles the gaze controller for each step of the module
     */
-    bool handleGaze();
+    void handleGaze();
 
     /**
     * Locates the contact in World Reference Frame's coordinates

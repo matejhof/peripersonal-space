@@ -866,7 +866,7 @@ bool vtRFThread::computeX(IncomingEvent4Taxel &ie)
     return true;
 }
 
-bool vtRFThread::resetParzenWindows()
+void vtRFThread::resetParzenWindows()
 {
     for (size_t i = 0; i < iCubSkin.size(); i++)
     {
