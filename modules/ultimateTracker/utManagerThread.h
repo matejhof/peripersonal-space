@@ -78,6 +78,10 @@ protected:
 
     bool noInput();
 
+    /**
+    * Processes data coming from the motionCUT.
+    * @return true/false if a a stable moving object is detected
+    **/
     bool processMotion();
 
     /**
@@ -85,18 +89,41 @@ protected:
     **/
     bool stabilityCheck();
 
+    /**
+    * Initializes the template tracker by giving a first snapshot for it to track it down
+    **/
     bool initializeTracker();
 
+    /**
+    * Reads the output from the tracker, and retrieves the center of the tracked object into the image plane
+    **/
     bool readFromTracker();
 
+
+    /**
+    * Converts the 2D tracked point into a 3D point thanks to the stereovision.
+    * @return true/false for success/failure (if the stereoVision fails it returns false)
+    **/
     bool getPointFromStereo();
 
+    /**
+    * Handles the kalman filter, by inizializing it and feeding it with stereo 3D data.
+    **/
     bool manageKalman();
 
+    /**
+    * Handles the iCubGui, by drawing the tracked object on the screen.
+    **/
     void manageiCubGui();
 
+    /**
+    * Deletes the object from the gui if it is not tracked any more.
+    **/
     void deleteGuiTarget();
 
+    /**
+    * Sends out the 3D position of the tracked point. May be used by the gaze controller later.
+    **/
     void sendData();
 
     /**
