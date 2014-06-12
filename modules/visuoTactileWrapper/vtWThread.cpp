@@ -120,7 +120,7 @@ void vtWThread::run()
     // process the optFlow
     if (optFlowBottle = optFlowPort.read(false))
     {
-        if (optFlowBottle->size()>3)
+        if (optFlowBottle->size()>=3)
         {
             optFlowPos.zero();
             

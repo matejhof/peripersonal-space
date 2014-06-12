@@ -114,7 +114,7 @@ protected:
     /**
     * Handles the iCubGui, by drawing the tracked object on the screen.
     **/
-    void manageiCubGui();
+    void sendGuiTarget();
 
     /**
     * Deletes the object from the gui if it is not tracked any more.
