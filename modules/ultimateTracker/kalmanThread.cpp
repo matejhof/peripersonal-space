@@ -6,29 +6,7 @@ kalmanThread::kalmanThread(int _rate, const string &_name, const string &_robot,
     setKalmanState(KALMAN_INIT);
     timeNow = yarp::os::Time::now();
 
-    kalOrder  = 4;
-    kalOut.resize(kalOrder,0.0);
-    kalTs     = 0.1;
-    kalIn.resize(3,0.0);
-
-    kalA      = eye(kalOrder);
-    kalA(0,1) = 0.01;
-    kalA(0,2) = 0.0001;
-    kalA(1,2) = 0.01;
-    kalA(1,3) = 0.0001;
-    kalA(2,3) = 0.01;
-
-    kalH      = zeros(1,kalOrder);
-    kalH(0,0) = 1;
-
-    kalQ = 0.00001 * eye(kalOrder);
-    kalP = 0.00001 * eye(kalOrder);
-
-    // Threshold is set to chi2inv(0.95,1)
-    kalThres = 3.8415;
-
-    kalR      = eye(1);
-    kalR(0,0) = 0.01;
+    generateMatrices(4);
 
     for (size_t i = 0; i < 3; i++)
     {
@@ -75,6 +53,38 @@ void kalmanThread::run()
         }
     }
 }
+
+
+bool kalmanThread::generateMatrices(const int order)
+{
+    kalOrder = order;
+
+    kalOut.resize(kalOrder,0.0);
+    kalTs     = 0.1;
+    kalIn.resize(3,0.0);
+
+    kalA      = eye(kalOrder);
+    kalA(0,1) = 0.01;
+    kalA(0,2) = 0.0001;
+    kalA(1,2) = 0.01;
+    kalA(1,3) = 0.0001;
+    kalA(2,3) = 0.01;
+
+    kalH      = zeros(1,kalOrder);
+    kalH(0,0) = 1;
+
+    kalQ = 0.00001 * eye(kalOrder);
+    kalP = 0.00001 * eye(kalOrder);
+
+    // Threshold is set to chi2inv(0.95,1)
+    kalThres = 3.8415;
+
+    kalR      = eye(1);
+    kalR(0,0) = 0.01;
+
+    return true;
+}
+
 
 bool kalmanThread::kalmanUpdate()
 {

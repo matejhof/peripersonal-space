@@ -92,6 +92,11 @@ protected:
     bool kalmanUpdate();
 
     /**
+    * Generates the proper kalman matrices, starting from the order
+    **/
+    bool generateMatrices(const int order);
+
+    /**
     * Prints a message according to the verbosity level:
     * @param l is the level of verbosity: if level > verbosity, something is printed
     * @param f is the text. Please use c standard (like printf)
