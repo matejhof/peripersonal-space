@@ -42,7 +42,7 @@ void utManagerThread::run()
     switch (stateFlag)
     {
         case 0:
-            printMessage(0,"Looking for motion\n");
+            printMessage(0,"Looking for motion...\n");
             timeNow = yarp::os::Time::now();
             oldMcutPoss.clear();
             stateFlag++;
@@ -80,6 +80,7 @@ void utManagerThread::run()
             }
             
             kalThrd -> getKalmanState(kalState);
+            sendGuiTarget();
             if (kalState == KALMAN_STOPPED)
             {
                 printMessage(0,"For some reasons, the kalman filters stopped. Going back to initial state.\n");
@@ -93,7 +94,6 @@ void utManagerThread::run()
     }
     
     kalThrd -> getKalmanOutput(kalOut);
-    manageiCubGui();
     printMessage(1,"stateFlag %i kalState %i kalmanPos: %s\n",stateFlag,kalState,kalOut.toString().c_str());
 
     if (stateFlag == 3)
@@ -118,7 +118,7 @@ bool utManagerThread::manageKalman()
     return true;
 }
 
-void utManagerThread::manageiCubGui()
+void utManagerThread::sendGuiTarget()
 {
     if (outPortGui.getOutputCount()>0)
     {
