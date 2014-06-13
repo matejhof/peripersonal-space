@@ -11,7 +11,7 @@ kalmanThread::kalmanThread(int _rate, const string &_name, const string &_robot,
     kalThres = 3.8415;          // Threshold is set to chi2inv(0.95,1)
 
     generateMatrices();
-    printMessage(2,"MATRICES:\nkalTs:    %g\nkalA:\n%s\nkalH:\n%s\nkalQ:\n%s\nkalR:    %s\nkalThres: %g\n",
+    printMessage(0,"MATRICES:\nkalTs:    %g\nkalA:\n%s\nkalH:\n%s\nkalQ:\n%s\nkalR:    %s\nkalThres: %g\n",
                     kalTs, kalA.toString().c_str(),kalH.toString().c_str(),
                     kalQ.toString().c_str(),kalR.toString().c_str(),kalThres);
 
@@ -71,7 +71,7 @@ bool kalmanThread::generateMatrices()
     for (size_t i = 0; i < kalOrder; i++)
     {
         el(0,i) = pow(kalTs,i+1)/factorial(i+1);
-        printMessage(3,"i: %i kalTs: %g pow: %g factorial: %i el(0,i) %g\n",
+        printMessage(2,"i: %i kalTs: %g pow: %g factorial: %i el(0,i) %g\n",
                         i,kalTs,pow(kalTs,i+1),factorial(i+1),pow(kalTs,i+1)/factorial(i+1));
     }
 
