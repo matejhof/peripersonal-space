@@ -1,12 +1,19 @@
 #include "kalmanThread.h"
 
-kalmanThread::kalmanThread(int _rate, const string &_name, const string &_robot, int _v, double _nDThr) :
-                       RateThread(_rate), name(_name), robot(_robot), verbosity(_v), noDataThres(_nDThr)
+kalmanThread::kalmanThread(int _rate, const string &_name, const string &_robot, int _v, double _nDThr, unsigned int _kalOrder) :
+                       RateThread(_rate), name(_name), robot(_robot), verbosity(_v), noDataThres(_nDThr),kalOrder(_kalOrder)
 {
     setKalmanState(KALMAN_INIT);
     timeNow = yarp::os::Time::now();
 
-    generateMatrices(4);
+    kalIn.resize(3,0.0);
+    kalTs = double(_rate)/1000;
+    kalThres = 3.8415;          // Threshold is set to chi2inv(0.95,1)
+
+    generateMatrices();
+    printMessage(2,"MATRICES:\nkalTs:    %g\nkalA:\n%s\nkalH:\n%s\nkalQ:\n%s\nkalR:    %s\nkalThres: %g\n",
+                    kalTs, kalA.toString().c_str(),kalH.toString().c_str(),
+                    kalQ.toString().c_str(),kalR.toString().c_str(),kalThres);
 
     for (size_t i = 0; i < 3; i++)
     {
@@ -54,30 +61,35 @@ void kalmanThread::run()
     }
 }
 
-
-bool kalmanThread::generateMatrices(const int order)
+bool kalmanThread::generateMatrices()
 {
-    kalOrder = order;
-
     kalOut.resize(kalOrder,0.0);
-    kalTs     = 0.1;
-    kalIn.resize(3,0.0);
 
     kalA      = eye(kalOrder);
-    kalA(0,1) = 0.01;
-    kalA(0,2) = 0.0001;
-    kalA(1,2) = 0.01;
-    kalA(1,3) = 0.0001;
-    kalA(2,3) = 0.01;
+    Matrix el = zeros(1,kalOrder);
+
+    for (size_t i = 0; i < kalOrder; i++)
+    {
+        el(0,i) = pow(kalTs,i+1)/factorial(i+1);
+        printMessage(3,"i: %i kalTs: %g pow: %g factorial: %i el(0,i) %g\n",
+                        i,kalTs,pow(kalTs,i+1),factorial(i+1),pow(kalTs,i+1)/factorial(i+1));
+    }
+
+    for (size_t i = 0; i < kalOrder; i++)
+    {
+        int k = 0;
+        for (int j = i+1; j < kalOrder; j++)
+        {
+            kalA(i,j) = el(0,k);
+            k += 1;
+        }
+    }
 
     kalH      = zeros(1,kalOrder);
     kalH(0,0) = 1;
 
     kalQ = 0.00001 * eye(kalOrder);
     kalP = 0.00001 * eye(kalOrder);
-
-    // Threshold is set to chi2inv(0.95,1)
-    kalThres = 3.8415;
 
     kalR      = eye(1);
     kalR(0,0) = 0.01;

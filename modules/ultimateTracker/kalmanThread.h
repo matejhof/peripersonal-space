@@ -32,9 +32,11 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <vector>
+#include <math.h>
 
 #include <iCub/ctrl/math.h>
 #include <iCub/ctrl/kalman.h>
+#include <iCub/periPersonalSpace/utils.h>
 
 using namespace yarp;
 using namespace yarp::os;
@@ -78,9 +80,10 @@ protected:
     Mutex  outMutex;     // Mutex that handles the writing/reading of kalOut
 
     vector <iCub::ctrl::Kalman> posVelKalman;
-    int    kalOrder;
-    double kalTs;
-    double kalThres;
+    unsigned int kalOrder;      // The order of the kalman filters
+    double       kalTs;         // The rate of the kalman filters
+    double       kalThres;
+
     Matrix kalA;
     Matrix kalH;
     Matrix kalQ;
@@ -94,7 +97,7 @@ protected:
     /**
     * Generates the proper kalman matrices, starting from the order
     **/
-    bool generateMatrices(const int order);
+    bool generateMatrices();
 
     /**
     * Prints a message according to the verbosity level:
@@ -105,7 +108,7 @@ protected:
     
 public:
     // CONSTRUCTOR
-    kalmanThread(int _rate, const string &_name, const string &_robot, int _v, double _nDThr);
+    kalmanThread(int _rate, const string &_name, const string &_robot, int _v, double _nDThr, unsigned int _kalOrder);
     // INIT
     virtual bool threadInit();
     // RUN

@@ -84,13 +84,18 @@ class ultimateTracker: public RFModule
 {
 private:
     utManagerThread *utMngrThrd;
-    kalmanThread          *kalThrd;
+    kalmanThread    *kalThrd;
 
-    RpcClient             rpcClnt;
-    RpcServer             rpcSrvr;
+    RpcClient        rpcClnt;
+    RpcServer        rpcSrvr;
 
-    string robot,name;
-    int verbosity,managerRate,kalmanRate,timeThres;
+    string robot;
+    string name;
+    int verbosity;
+    int managerRate;
+    int kalmanRate;
+    int kalmanOrder;
+    int timeThres;
 
 public:
     ultimateTracker()
@@ -136,9 +141,10 @@ public:
         name  = "ultimateTracker";
         robot = "icub";
 
-        verbosity   = 0;        // verbosity
-        managerRate = 20;       // rate of the utManagerThread [ms]
-        kalmanRate  = 10;       // rate of the kalmanThread [ms]
+        verbosity   =   0;      // verbosity
+        managerRate =  20;      // rate of the utManagerThread [ms]
+        kalmanRate  =  10;      // rate of the kalmanThread [ms]
+        kalmanOrder =   2;      // order of the kalman filters
         timeThres   = 100;      // time threshold for the kalman thread [ms]
 
         //******************************************************
@@ -160,7 +166,7 @@ public:
                 cout << "Robot is: " << robot << endl;
             }
             else cout << "Could not find robot option in the config file; using "
-                      << robot << " as default\n";
+                      << robot << " as default.\n";
 
         //******************* VERBOSE ******************
             if (rf.check("verbosity"))
@@ -169,39 +175,48 @@ public:
                 cout << "utManagerThread verbosity set to " << verbosity << endl;
             }
             else cout << "Could not find verbosity option in " <<
-                         "config file; using "<< verbosity <<" as default\n";
+                         "config file; using "<< verbosity <<" as default.\n";
 
         //****************** managerRate ******************
             if (rf.check("managerRate"))
             {
                 managerRate = rf.find("managerRate").asInt();
-                cout << "utManagerThread managerRateThread working at " << managerRate << " ms\n";
+                cout << "utManagerThread managerRateThread working at " << managerRate << " ms.\n";
             }
             else cout << "Could not find managerRate in the config file; using "
-                      << managerRate << " ms as default\n";
+                      << managerRate << " ms as default.\n";
 
         //****************** kalmanRate ******************
             if (rf.check("kalmanRate"))
             {
                 kalmanRate = rf.find("kalmanRate").asInt();
-                cout << "utManagerThread kalmanRateThread working at " << kalmanRate << " ms\n";
+                cout << "utManagerThread kalmanRateThread working at " << kalmanRate << " ms.\n";
             }
             else cout << "Could not find kalmanRate in the config file; using "
-                      << kalmanRate << " ms as default\n";
+                      << kalmanRate << " ms as default.\n";
+
+        //****************** kalmanOrder ******************
+            if (rf.check("kalmanOrder"))
+            {
+                kalmanOrder = rf.find("kalmanOrder").asInt();
+                cout << "Kalman filters' order has been set to " << kalmanOrder << ".\n";
+            }
+            else cout << "Could not find kalmanOrder in the config file; using "
+                      << kalmanOrder << " as default.\n";
 
         //****************** timeThres ******************
             if (rf.check("timeThres"))
             {
                 timeThres = rf.find("timeThres").asInt();
-                cout << "utManagerThread timeThresThread working at " << timeThres << " ms\n";
+                cout << "utManagerThread timeThresThread working at " << timeThres << " ms.\n";
             }
             else cout << "Could not find timeThres in the config file; using "
-                      << timeThres << " ms as default\n";
+                      << timeThres << " ms as default.\n";
 
         //******************************************************
         //*********************** THREADS **********************
             string kalThrdName = name + "/Kalman";
-            kalThrd = new kalmanThread(kalmanRate, kalThrdName, robot, verbosity, timeThres);
+            kalThrd = new kalmanThread(kalmanRate, kalThrdName, robot, verbosity, timeThres, kalmanOrder);
             if (!kalThrd -> start())
             {
                 delete kalThrd;
