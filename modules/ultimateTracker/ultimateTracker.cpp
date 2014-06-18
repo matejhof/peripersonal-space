@@ -144,7 +144,7 @@ public:
         verbosity   =   0;      // verbosity
         managerRate =  20;      // rate of the utManagerThread [ms]
         kalmanRate  =  10;      // rate of the kalmanThread [ms]
-        kalmanOrder =   2;      // order of the kalman filters
+        kalmanOrder =   4;      // order of the kalman filters
         timeThres   = 100;      // time threshold for the kalman thread [ms]
 
         //******************************************************
@@ -297,6 +297,7 @@ int main(int argc, char * argv[])
         cout << "   --verbosity   int:   verbosity level (default 0)." << endl;
         cout << "   --managerRate int:   the period used by the manager thread. Default 20ms." << endl;
         cout << "   --kalmanRate  int:   the period used by the kalman  thread. Default 10ms." << endl;
+        cout << "   --kalmanOrder int:   the order of the dynamic model underneath the kalman filter. Default 4 (constant jerk)." << endl;
         cout << "   --timeThres   int:   the threshold after which the kalman gets stoppe. Default 100ms." << endl;
         cout << endl;
         return 0;

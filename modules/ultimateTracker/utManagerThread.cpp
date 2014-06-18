@@ -216,7 +216,7 @@ bool utManagerThread::stabilityCheck()
         stdev(1)=sqrt(stdev(1));
 
         // if samples are mostly lying around the mean
-        if ((2.0*stdev(0)<10.0) && (2.0*stdev(1)<10.0))
+        if ((2.0*stdev(0)<6.0) && (2.0*stdev(1)<6.0))
             return true; 
     }
 
