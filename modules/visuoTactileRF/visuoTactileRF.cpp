@@ -204,7 +204,7 @@ public:
             if (rf.check("robot"))
             {
                 robot = rf.find("robot").asString();
-                cout << "Robot is: " << robot << endl;
+                cout << "Robot is " << robot << endl;
             }
             else cout << "Could not find robot option in the config file; using "
                       << robot << " as default\n";
@@ -222,7 +222,7 @@ public:
             if (rf.check("rate"))
             {
                 rate = rf.find("rate").asInt();
-                cout << "vtRFThread rateThread working at " << rate << " ms\n";
+                cout << "vtRFThread working at " << rate << " ms\n";
             }
             else cout << "Could not find rate in the config file; using "
                       << rate << " ms as default\n";
@@ -254,8 +254,8 @@ public:
 
                     for(int i=0;i<partNum;i++)     // all of the skinparts
                     {
-                        if (i==2)                   // only right hand
-                        // if (i==3)                      // only right forearm
+                        // if (i==2)                   // only right hand
+                        if (i==3)                      // only right forearm
                         // if (i==1)                         // only left forearm
                         {
                             string taxelPosFile = taxelPosFiles->get(i).asString().c_str();
