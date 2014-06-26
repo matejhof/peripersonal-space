@@ -542,7 +542,7 @@ bool vtRFThread::detectContact(iCub::skinDynLib::skinContactList *_sCL, int &_ID
     // Search for a suitable contact:
     for(iCub::skinDynLib::skinContactList::iterator it=_sCL->begin(); it!=_sCL->end(); it++)
     {
-        if( it -> getPressure() > SKIN_THRES )
+        if( it -> getPressure() > SKIN_THRES && (it -> getTaxelList()).size() > 2 )
         {
             for (size_t i = 0; i < iCubSkin.size(); i++)
             {
