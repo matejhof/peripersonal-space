@@ -6,7 +6,7 @@
 
    <module>
         <name>dataDumper</name>
-	<parameters>--name /data/skin_events --rxTime</parameters>
+	<parameters>--name /data/skin_events --txTime --rxTime</parameters>
         <node>localhost</node>
         <stdio></stdio>
         <tag>dataDumperSkinContact</tag>
@@ -14,49 +14,49 @@
    
     <module>
         <name>dataDumper</name>
-	<parameters>--name /data/skin_tactile_comp_left_hand --rxTime</parameters>
+	<parameters>--name /data/skin_tactile_comp_left_hand --txTime --rxTime</parameters>
         <node>localhost</node>
         <stdio></stdio>
         <tag>dataDumperSkinLeftHandComp</tag>
     </module>
     <module>
         <name>dataDumper</name>
-	<parameters>--name /data/skin_tactile_comp_left_forearm --rxTime</parameters>
+	<parameters>--name /data/skin_tactile_comp_left_forearm --txTime --rxTime</parameters>
         <node>localhost</node>
         <stdio></stdio>
         <tag>dataDumperSkinLeftForearmComp</tag>
     </module>
     <module>
         <name>dataDumper</name>
-	<parameters>--name /data/skin_tactile_comp_left_arm --rxTime</parameters>
+	<parameters>--name /data/skin_tactile_comp_left_arm --txTime --rxTime</parameters>
         <node>localhost</node>
         <stdio></stdio>
         <tag>dataDumperSkinLeftArmComp</tag>
     </module>
     <module>
         <name>dataDumper</name>
-	<parameters>--name /data/skin_tactile_comp_right_hand --rxTime</parameters>
+	<parameters>--name /data/skin_tactile_comp_right_hand --txTime --rxTime</parameters>
         <node>localhost</node>
         <stdio></stdio>
         <tag>dataDumperSkinRightHandComp</tag>
     </module>
     <module>
         <name>dataDumper</name>
-	<parameters>--name /data/skin_tactile_comp_right_forearm --rxTime</parameters>
+	<parameters>--name /data/skin_tactile_comp_right_forearm --txTime --rxTime</parameters>
         <node>localhost</node>
         <stdio></stdio>
         <tag>dataDumperSkinRightForearmComp</tag>
     </module>
     <module>
         <name>dataDumper</name>
-	<parameters>--name /data/skin_tactile_comp_right_arm --rxTime</parameters>
+	<parameters>--name /data/skin_tactile_comp_right_arm --txTime --rxTime</parameters>
         <node>localhost</node>
         <stdio></stdio>
         <tag>dataDumperSkinRightArmComp</tag>
     </module>
     <module>
         <name>dataDumper</name>
-	<parameters>--name /data/skin_tactile_comp_torso --rxTime</parameters>
+	<parameters>--name /data/skin_tactile_comp_torso --txTime --rxTime</parameters>
         <node>localhost</node>
         <stdio></stdio>
         <tag>dataDumperSkinTorsoComp</tag>
@@ -64,42 +64,42 @@
      
     <module>
         <name>dataDumper</name>
-	<parameters>--name /data/joints_head --rxTime</parameters>
+	<parameters>--name /data/joints_head --txTime --rxTime</parameters>
         <node>localhost</node>
         <stdio></stdio>
         <tag>dataDumperHeadJoints</tag>
     </module> 
     <module>
         <name>dataDumper</name>
-        <parameters>--name /data/joints_torso --rxTime</parameters>
+        <parameters>--name /data/joints_torso --txTime --rxTime</parameters>
         <node>localhost</node>
         <stdio></stdio>
         <tag>dataDumperTorsoJoints</tag>
     </module>
     <module>
         <name>dataDumper</name>
-        <parameters>--name /data/joints_leftArm --rxTime</parameters>
+        <parameters>--name /data/joints_leftArm --txTime --rxTime</parameters>
         <node>localhost</node>
         <stdio></stdio>
         <tag>dataDumperLeftArmJoints</tag>
     </module>
     <module>
         <name>dataDumper</name>
-        <parameters>--name /data/joints_rightArm --rxTime</parameters>
+        <parameters>--name /data/joints_rightArm --txTime --rxTime</parameters>
         <node>localhost</node>
         <stdio></stdio>
         <tag>dataDumperRightArmJoints</tag>
     </module>
     <module>
         <name>dataDumper</name>
-        <parameters>--name /data/joints_leftLeg --rxTime</parameters>
+        <parameters>--name /data/joints_leftLeg --txTime --rxTime</parameters>
         <node>localhost</node>
         <stdio></stdio>
         <tag>dataDumperLeftLegJoints</tag>
     </module>
     <module>
         <name>dataDumper</name>
-        <parameters>--name /data/joints_rightLeg --rxTime</parameters>
+        <parameters>--name /data/joints_rightLeg --txTime --rxTime</parameters>
         <node>localhost</node>
         <stdio></stdio>
         <tag>dataDumperRightLegJoints</tag>
@@ -107,7 +107,7 @@
     
     <module>
         <name>dataDumper</name>
-        <parameters>--name /data/inertial --rxTime</parameters>
+        <parameters>--name /data/inertial --txTime --rxTime</parameters>
         <node>localhost</node>
         <stdio></stdio>
         <tag>dataDumperInertial</tag>
@@ -115,14 +115,14 @@
     
     <module>
         <name>dataDumper</name>
-        <parameters>--name /data/images/left --type image --rxTime</parameters>
+        <parameters>--name /data/images/left --type image --txTime --rxTime</parameters>
         <node>localhost</node>
         <stdio></stdio>
         <tag>dataDumperLeftEye</tag>
     </module>
     <module>
         <name>dataDumper</name>
-        <parameters>--name /data/images/right --type image --rxTime</parameters>
+        <parameters>--name /data/images/right --type image --txTime --rxTime</parameters>
         <node>localhost</node>
         <stdio></stdio>
         <tag>dataDumperRightEye</tag>
@@ -130,42 +130,42 @@
 
     <module>
         <name>dataDumper</name>
-	<parameters>--name /data/forces_leftArm --rxTime</parameters>
+	<parameters>--name /data/forces_leftArm --txTime --rxTime</parameters>
         <node>localhost</node>
         <stdio></stdio>
         <tag>dataDumperLeftArmForces</tag>
     </module>
     <module>
         <name>dataDumper</name>
-	<parameters>--name /data/forces_rightArm --rxTime</parameters>
+	<parameters>--name /data/forces_rightArm --txTime --rxTime</parameters>
         <node>localhost</node>
         <stdio></stdio>
         <tag>dataDumperRightArmForces</tag>
     </module>
     <module>
         <name>dataDumper</name>
-	<parameters>--name /data/forces_leftLeg --rxTime</parameters>
+	<parameters>--name /data/forces_leftLeg --txTime --rxTime</parameters>
         <node>localhost</node>
         <stdio></stdio>
         <tag>dataDumperLeftLegForces</tag>
     </module>
     <module>
         <name>dataDumper</name>
-	<parameters>--name /data/forces_rightLeg --rxTime</parameters>
+	<parameters>--name /data/forces_rightLeg --txTime --rxTime</parameters>
         <node>localhost</node>
         <stdio></stdio>
         <tag>dataDumperRightLegForces</tag>
     </module>
     <module>
         <name>dataDumper</name>
-	<parameters>--name /data/forces_leftFoot --rxTime</parameters>
+	<parameters>--name /data/forces_leftFoot --txTime --rxTime</parameters>
         <node>localhost</node>
         <stdio></stdio>
         <tag>dataDumperLeftFootForces</tag>
     </module>
     <module>
         <name>dataDumper</name>
-	<parameters>--name /data/forces_rightFoot --rxTime</parameters>
+	<parameters>--name /data/forces_rightFoot --txTime --rxTime</parameters>
         <node>localhost</node>
         <stdio></stdio>
         <tag>dataDumperRightFootForces</tag>
