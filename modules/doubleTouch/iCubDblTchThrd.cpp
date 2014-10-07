@@ -3,9 +3,11 @@
 #include <sstream>
 #include <iomanip>
 
+#define HAND_LEFT      1
 #define FOREARM_LEFT   2
+#define HAND_RIGHT     4
 #define FOREARM_RIGHT  5
-#define VEL_THRES      0.00000001        // m/s?
+#define VEL_THRES      0.000001        // m/s?
 // VEL_THRES * getRate()
 
 doubleTouchThread::doubleTouchThread(int _rate, const string &_name, const string &_robot, int _v,
@@ -81,7 +83,10 @@ bool doubleTouchThread::threadInit()
     skinPort -> open(("/"+name+"/contacts:i").c_str());
     outPort  -> open(("/"+name+"/status:o").c_str());
 
-    //Network::connect("/skinManager/skin_events:o",("/"+name+"/contacts:i").c_str());
+    if (robot=="icubSim")
+    {
+        Network::connect("/skinManager/skin_events:o",("/"+name+"/contacts:i").c_str());
+    }
     Network::connect(("/"+name+"/status:o").c_str(),"/visuoTactileRF/input:i");
 
 
@@ -324,7 +329,7 @@ void doubleTouchThread::run()
                 break;
             case 2:
                 solveIK();
-                printMessage(0,"Going to taxel...Desired EE: %s\n",(s1->ee).toString().c_str());
+                printMessage(0,"Going to taxel... Desired EE: %s\n",(s1->ee).toString().c_str());
                 printMessage(2,"jnts=%s\n",(s1->joints*CTRL_RAD2DEG).toString().c_str());
                 step++;
                 recFlag = 1;
