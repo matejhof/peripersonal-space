@@ -63,7 +63,7 @@ YARP, ICUB libraries and IPOPT
   with rec==2 is started
 
 --type       \e type
-- Type of the task (right now it can be either "R2L" or "L2R" or "both")
+- Type of the task (right now it can be either "LtoR" or "L2R" or "both")
 
 --filename   \e file
 - The name of the file to be saved in case of a recording session.
@@ -130,9 +130,9 @@ public:
     {
         dblTchThrd=0;
 
-        robot    ="icubSim";
-        name     ="doubleTouch";
-        type     ="R2L"; // "L2R" "both"
+        robot    = "icubSim";
+        name     = "doubleTouch";
+        type     = "LtoR"; // "RtoL" "both"
         filename = ".txt";
         color    = "";
 

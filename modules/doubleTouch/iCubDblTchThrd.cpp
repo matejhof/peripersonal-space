@@ -19,19 +19,19 @@ doubleTouchThread::doubleTouchThread(int _rate, const string &_name, const strin
     outPort  = new BufferedPort<Bottle>;
     slv      = new iCubDoubleTouch_Solver(type);
 
-    if      ((type == "R2L") || (type == "both"))
+    if      ((type == "LtoR") || (type == "both"))
     {
-        g     = new iCubDoubleTouch_Variables(slv->getSubProblem("R2L")->getNVars()); // guess
-        s0    = new iCubDoubleTouch_Variables(slv->getSubProblem("R2L")->getNVars()); // solution - waypoint
-        s1    = new iCubDoubleTouch_Variables(slv->getSubProblem("R2L")->getNVars()); // solution
-        solution.resize(slv->getSubProblem("R2L")->getNVars(),0.0);
+        g     = new iCubDoubleTouch_Variables(slv->getSubProblem("LtoR")->getNVars()); // guess
+        s0    = new iCubDoubleTouch_Variables(slv->getSubProblem("LtoR")->getNVars()); // solution - waypoint
+        s1    = new iCubDoubleTouch_Variables(slv->getSubProblem("LtoR")->getNVars()); // solution
+        solution.resize(slv->getSubProblem("LtoR")->getNVars(),0.0);
     }
-    else if (type == "L2R")
+    else if (type == "RtoL")
     {
-        g     = new iCubDoubleTouch_Variables(slv->getSubProblem("L2R")->getNVars()); // guess
-        s0    = new iCubDoubleTouch_Variables(slv->getSubProblem("L2R")->getNVars()); // solution - waypoint
-        s1    = new iCubDoubleTouch_Variables(slv->getSubProblem("L2R")->getNVars()); // solution
-        solution.resize(slv->getSubProblem("L2R")->getNVars(),0.0);
+        g     = new iCubDoubleTouch_Variables(slv->getSubProblem("RtoL")->getNVars()); // guess
+        s0    = new iCubDoubleTouch_Variables(slv->getSubProblem("RtoL")->getNVars()); // solution - waypoint
+        s1    = new iCubDoubleTouch_Variables(slv->getSubProblem("RtoL")->getNVars()); // solution
+        solution.resize(slv->getSubProblem("RtoL")->getNVars(),0.0);
     }
 
     armR = new iCubArm("right");
@@ -47,17 +47,17 @@ doubleTouchThread::doubleTouchThread(int _rate, const string &_name, const strin
     R2LskinPart = -1;       L2RskinPart = -1;
     testLimbR2L = NULL;     testLimbL2R = NULL;
 
-    if ((type == "R2L") || (type == "both"))
+    if ((type == "LtoR") || (type == "both"))
     {
         R2LskinPart = FOREARM_LEFT;
-        slv->getSubProblem("R2L")->limb.setAng(g->joints);
-        testLimbR2L = new iCubCustomLimb("R2L");
+        slv->getSubProblem("LtoR")->limb.setAng(g->joints);
+        testLimbR2L = new iCubCustomLimb("LtoR");
     }
-    if ((type == "L2R") || (type == "both"))
+    if ((type == "RtoL") || (type == "both"))
     {
         L2RskinPart = FOREARM_RIGHT;
-        slv->getSubProblem("L2R")->limb.setAng(g->joints);
-        testLimbL2R = new iCubCustomLimb("L2R");
+        slv->getSubProblem("RtoL")->limb.setAng(g->joints);
+        testLimbL2R = new iCubCustomLimb("RtoL");
     }
 
     contextGaze = -1;
@@ -194,21 +194,21 @@ bool doubleTouchThread::threadInit()
     ok = ok && iimpL->setImpedance(4,  0.2, 0.00);
 
     Vector joints;
-    if ((type == "R2L") || (type == "both"))
+    if ((type == "LtoR") || (type == "both"))
     {
         iencsR->getEncoders(encsR->data());
-        slv->getSubProblem("R2L")->index.getChainJoints(*encsR,joints);
-        Matrix indexHR = slv->getSubProblem("R2L")->index.getH(joints*CTRL_DEG2RAD);
-        slv->getSubProblem("R2L")->limb.setHN(indexHR);
+        slv->getSubProblem("LtoR")->index.getChainJoints(*encsR,joints);
+        Matrix indexHR = slv->getSubProblem("LtoR")->index.getH(joints*CTRL_DEG2RAD);
+        slv->getSubProblem("LtoR")->limb.setHN(indexHR);
         testLimbR2L->setHN(indexHR);
         printMessage(1,"indexHR\n%s\n", indexHR.toString().c_str());
     }
-    if ((type == "L2R") || (type == "both"))
+    if ((type == "RtoL") || (type == "both"))
     {
         iencsL->getEncoders(encsL->data());
-        slv->getSubProblem("L2R")->index.getChainJoints(*encsL,joints);
-        Matrix indexHL=slv->getSubProblem("L2R")->index.getH(joints*CTRL_DEG2RAD);
-        slv->getSubProblem("L2R")->limb.setHN(indexHL);
+        slv->getSubProblem("RtoL")->index.getChainJoints(*encsL,joints);
+        Matrix indexHL=slv->getSubProblem("RtoL")->index.getH(joints*CTRL_DEG2RAD);
+        slv->getSubProblem("RtoL")->limb.setHN(indexHL);
         testLimbL2R->setHN(indexHL);
         printMessage(1,"indexHL\n%s\n", indexHL.toString().c_str());
     }
@@ -227,7 +227,7 @@ void doubleTouchThread::run()
     output.addInt(recFlag);
     output.addString(currentTask.c_str());
 
-    if (currentTask == "R2L" || currentTask == "L2R")
+    if (currentTask == "LtoR" || currentTask == "RtoL")
     {
         matrixIntoBottle(cntctH0,output);
         matrixIntoBottle(slv->getSubProblem(currentTask.c_str())->limb.getHN(),output);
@@ -245,7 +245,7 @@ void doubleTouchThread::run()
                 printMessage(1,"Moving to rest...\n");
                 goToRest();
                 // move the thumbs close to the hand
-                if ((type == "R2L") || (type == "both"))
+                if ((type == "LtoR") || (type == "both"))
                 {
                     //iposR -> positionMove(8,10);    iposR -> positionMove(9,90);
                     //iposR -> positionMove(13,90);   iposR -> positionMove(14,180);   iposR -> positionMove(15,270);
@@ -294,7 +294,7 @@ void doubleTouchThread::run()
                             iposR->setRefSpeed(i,vels[i]);
                     }
                 }
-                if ((type == "L2R") || (type == "both"))
+                if ((type == "RtoL") || (type == "both"))
                 {
                     //iposL -> positionMove(8,10);    iposL -> positionMove(9,90);
                     //iposL -> positionMove(13,90);   iposL -> positionMove(14,180);   iposL -> positionMove(15,270);
@@ -478,13 +478,13 @@ bool doubleTouchThread::testAchievement2(skinContactList *_sCL)
                         << qS.toString() << "\t" << qM.toString() << "\t"
                         << toVector(cntctH0).toString() << "\t"
                         << toVector(cntctH0_final).toString();
-            if (currentTask == "R2L")
+            if (currentTask == "LtoR")
             {
-                outputfile  << "\t" << toVector(slv->getSubProblem("R2L")->limb.getHN()).toString();
+                outputfile  << "\t" << toVector(slv->getSubProblem("LtoR")->limb.getHN()).toString();
             }
-            if (currentTask == "L2R")
+            if (currentTask == "RtoL")
             {
-                outputfile  << "\t" << toVector(slv->getSubProblem("L2R")->limb.getHN()).toString();
+                outputfile  << "\t" << toVector(slv->getSubProblem("RtoL")->limb.getHN()).toString();
             }
             outputfile  << endl;
             outputfile.close();
@@ -575,13 +575,13 @@ void doubleTouchThread::testAchievement()
     iencsM->getEncoders(encsM->data());
     iencsS->getEncoders(encsS->data());
 
-    if      (currentTask == "R2L")
+    if      (currentTask == "LtoR")
     {
         testLimbR2L->setAng((*encsS)*CTRL_DEG2RAD,(*encsM)*CTRL_DEG2RAD);
         printMessage(0,"                 Final EE    %s\n", testLimbR2L->EndEffPosition().toString().c_str());
         printMessage(2,"jnts=%s\n",(testLimbR2L->getAng()*CTRL_RAD2DEG).toString().c_str());
     }
-    else if (currentTask == "L2R")
+    else if (currentTask == "RtoL")
     {
         testLimbL2R->setAng((*encsS)*CTRL_DEG2RAD,(*encsM)*CTRL_DEG2RAD);
         printMessage(0,"                 Final EE    %s\n", testLimbL2R->EndEffPosition().toString().c_str());
@@ -593,40 +593,22 @@ void doubleTouchThread::solveIK(string s="standard")
 {
     cntctH0 = findH0(cntctSkin);
 
-    // if (s == "waypoint")
-    // {
-    //     printMessage(0,"H0: \n%s\n",cntctH0.toString().c_str());
-    //     Matrix safetyPoint = eye(4);
-    //     safetyPoint(0,3) = 0.02; // let's move 2 cm from the cover
-    //     cntctH0 = cntctH0 * safetyPoint;
-    // }
     printMessage(2,"H0: \n%s\n",cntctH0.toString().c_str());
     slv->getSubProblem(currentTask)->limb.setH0(SE3inv(cntctH0));
-    if      (currentTask == "R2L")
+    if      (currentTask == "LtoR")
             testLimbR2L->setH0(SE3inv(cntctH0));
-    else if (currentTask == "L2R")
+    else if (currentTask == "RtoL")
             testLimbL2R->setH0(SE3inv(cntctH0));
 
-    // if (s == "waypoint")
-    // {
-    //     slv->getSubProblem(currentTask)->limb.setAng(g->joints);
-    //     slv->setInitialGuess(*g);
-    //     slv->solve(*s0);
-    //     s0->print();
-    //     solution = CTRL_RAD2DEG * s0->joints;
-    // }
-    // else
-    {
-        slv->getSubProblem(currentTask)->limb.setAng(s0->joints);
-        slv->setInitialGuess(*s0);
-        slv->solve(*s1);
-        // s1->print();
-        solution = CTRL_RAD2DEG * s1->joints;
-    }
+    slv->getSubProblem(currentTask)->limb.setAng(s0->joints);
+    slv->setInitialGuess(*s0);
+    slv->solve(*s1);
+    // s1->print();
+    solution = CTRL_RAD2DEG * s1->joints;
 
-    if      (currentTask == "R2L")
+    if      (currentTask == "LtoR")
             testLimbR2L->setAng(s1->joints);
-    else if (currentTask == "L2R")
+    else if (currentTask == "RtoL")
             testLimbL2R->setAng(s1->joints);
 }
 
@@ -661,7 +643,7 @@ void doubleTouchThread::goToRest()
 {   
     Vector rest = CTRL_RAD2DEG * g->joints;
 
-    if ((currentTask == "R2L") || (currentTask == "L2R"))
+    if ((currentTask == "LtoR") || (currentTask == "RtoL"))
     {
         iposS -> positionMove(4,-rest[0]);
         iposS -> positionMove(3,-rest[1]);
@@ -705,21 +687,21 @@ bool doubleTouchThread::alignJointsBounds()
     lim.push_back(ilimL);
     lim.push_back(ilimR);
 
-    if ((type == "R2L") || (type == "both"))
+    if ((type == "LtoR") || (type == "both"))
     {
         if (testLimbR2L->alignJointsBounds(lim) == 0) return false;
-        if (slv->getSubProblem("R2L")->limb.alignJointsBounds(lim) == 0) return false;
+        if (slv->getSubProblem("LtoR")->limb.alignJointsBounds(lim) == 0) return false;
         lim.pop_front();
-        if (slv->getSubProblem("R2L")->index.alignJointsBounds(lim) == 0) return false;
+        if (slv->getSubProblem("LtoR")->index.alignJointsBounds(lim) == 0) return false;
     }
-    if ((type == "L2R") || (type == "both"))
+    if ((type == "RtoL") || (type == "both"))
     {
         lim.push_back(ilimR);
         if (testLimbL2R->alignJointsBounds(lim) == 0) return false;
-        if (slv->getSubProblem("L2R")->limb.alignJointsBounds(lim) == 0) return false;
+        if (slv->getSubProblem("RtoL")->limb.alignJointsBounds(lim) == 0) return false;
         lim.push_back(ilimR);
         lim.pop_back();
-        if (slv->getSubProblem("L2R")->index.alignJointsBounds(lim) == 0) return false;   
+        if (slv->getSubProblem("RtoL")->index.alignJointsBounds(lim) == 0) return false;   
     } 
     return true;
 }
@@ -754,7 +736,7 @@ void doubleTouchThread::detectContact(skinContactList *_sCL)
             if      (it -> getSkinPart() == FOREARM_LEFT)
             {
                 cntctSkinPart = "forearm_left";
-                currentTask   = "R2L";
+                currentTask   = "LtoR";
                 iposM  = iposR;  iposS  = iposL;
                 iencsM = iencsR; iencsS = iencsL;
                 encsM  = encsR;  encsS  = encsL;
@@ -764,7 +746,7 @@ void doubleTouchThread::detectContact(skinContactList *_sCL)
             else if (it -> getSkinPart() == FOREARM_RIGHT)
             {
                 cntctSkinPart = "forearm_right";
-                currentTask   = "L2R";
+                currentTask   = "RtoL";
                 iposM  = iposL;  iposS  = iposR;
                 iencsM = iencsL; iencsS = iencsR;
                 encsM  = encsL;  encsS  = encsR;
@@ -870,11 +852,11 @@ void doubleTouchThread::threadRelease()
         delete s0;  s0  = NULL;
         delete s1;  s1  = NULL;
 
-        if ((type == "R2L") || (type == "both"))
+        if ((type == "LtoR") || (type == "both"))
         {
             delete testLimbR2L; testLimbR2L = NULL;
         }
-        if ((type == "L2R") || (type == "both"))
+        if ((type == "RtoL") || (type == "both"))
         {
             delete testLimbL2R; testLimbL2R = NULL;
         }

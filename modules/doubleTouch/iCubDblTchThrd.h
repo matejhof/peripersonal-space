@@ -71,7 +71,7 @@ protected:
     string name;
     // Name of the robot (to address the module toward icub or icubSim):
     string robot;
-    // Type of the chain (either "R2L", "L2R", or "both")
+    // Type of the chain (either "LtoR", "RtoL", or "both")
     string type;
     // Flag to know if a recording session is needed.
     int record;

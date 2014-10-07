@@ -33,18 +33,18 @@ using namespace iCub::iKin;
     {   
         if (_type == "both")
         {
-            R2L = new iCubDoubleTouch_SubProblem("R2L","right_index");
-            L2R = new iCubDoubleTouch_SubProblem("L2R","left_index");
+            R2L = new iCubDoubleTouch_SubProblem("LtoR","right_index");
+            L2R = new iCubDoubleTouch_SubProblem("RtoL","left_index");
         }
-        else if (_type == "R2L")
+        else if (_type == "LtoR")
         {
-            R2L = new iCubDoubleTouch_SubProblem("R2L","right_index");
+            R2L = new iCubDoubleTouch_SubProblem("LtoR","right_index");
             L2R = NULL;
         }
-        else if (_type == "L2R")
+        else if (_type == "RtoL")
         {
             R2L = NULL;
-            L2R = new iCubDoubleTouch_SubProblem("L2R","left_index");
+            L2R = new iCubDoubleTouch_SubProblem("RtoL","left_index");
         }
         else
         {
@@ -495,7 +495,7 @@ using namespace iCub::iKin;
 /************************************************************************/
     iCubDoubleTouch_Solver::iCubDoubleTouch_Solver(string _type): problem(_type)
     {
-        if (_type == "R2L" || _type == "L2R")
+        if (_type == "LtoR" || _type == "RtoL")
         {
             setSubProblem(_type);
         }
@@ -510,7 +510,7 @@ using namespace iCub::iKin;
     /************************************************************************/
     iCubDoubleTouch_SubProblem* iCubDoubleTouch_Solver::getSubProblem(string _type)
     {
-        if (_type == "R2L" || _type == "L2R")
+        if (_type == "LtoR" || _type == "RtoL")
         {
             setSubProblem(_type);
         }
@@ -520,13 +520,13 @@ using namespace iCub::iKin;
     /************************************************************************/
     bool iCubDoubleTouch_Solver::setSubProblem(string _type)
     {
-        if      (_type == "R2L")
+        if      (_type == "LtoR")
         {
             current_subproblem_type = _type;
             current_subproblem = problem.R2L;
             return true;
         }
-        else if (_type == "L2R")
+        else if (_type == "RtoL")
         {
             current_subproblem_type = _type;
             current_subproblem = problem.L2R;
