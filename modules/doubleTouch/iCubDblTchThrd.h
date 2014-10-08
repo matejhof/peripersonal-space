@@ -77,7 +77,7 @@ protected:
     int record;
     // Name of the file that will store data
     string filename;
-    // Name of the file that will store data
+    // Color of the robot (to identify which one is which)
     string color;
 
     /***************************************************************************/
@@ -93,7 +93,6 @@ protected:
     string cntctArm;        // Affected Arm
     skinContact cntctSkin;  // SkinContact
     string cntctSkinPart;   // SkinPart (verbose form)
-    string currentTask;     // current task (either R2L or L2R)
 
     /***************************************************************************/
     // INTERNAL VARIABLES:
@@ -104,8 +103,7 @@ protected:
     // SkinPart to be handled
     // it can be either 2 (forearm_left), 5 (forearm_right)
     // or even 3 (upperarm_left) and 6 (upperarm_right) [TO DO]
-    int R2LskinPart;
-    int L2RskinPart;
+    int skinPart;
 
     // Port that reads contacts:
     BufferedPort<iCub::skinDynLib::skinContactList> *skinPort;
@@ -147,15 +145,13 @@ protected:
     int contextGaze;
 
     // IPOPT STUFF
-    iCubDoubleTouch_Variables *g;      // guess
-    iCubDoubleTouch_Variables *s0;     // solution - waypoint
-    iCubDoubleTouch_Variables *s1;     // solution
-    iCubDoubleTouch_Solver    *slv;    // solver
+    doubleTouch_Variables *gue;    // guess
+    doubleTouch_Variables *sol;    // solution
+    doubleTouch_Solver    *slv;    // solver
     Vector solution;
 
     // CUSTOM LIMB (for testing the achievement of the task)
-    iCubCustomLimb *testLimbL2R;
-    iCubCustomLimb *testLimbR2L;
+    iCubCustomLimb *testLimb;
 
     // CHECKMOTIONDONE VARIABLES:
     Vector oldEER;
@@ -270,26 +266,4 @@ public:
 };
 
 #endif
-
-// PERSONAL NOTES (remember to remove them sooner or later!)
-// iCub/main/src/tools/skinManagerGui
-// iCub/main/src/modules/skinManager
-// iCub/main/src/libraries/skinDynLib
-//
-// A skinContactList is represented as a list of lists
-// where each list is a skinContact
-// basically, it's a vector of skinContact
-//
-// A skinContact is a list of 8 elements that are:
-// - a list of 4 int, i.e. contactId, bodyPart, linkNumber, skinPart
-// - a list of 3 double, i.e. the CoP
-// - a list of 3 double, i.e. the force
-// - a list of 3 double, i.e. the moment
-// - a list of 3 double, i.e. the geometric center
-// - a list of 3 double, i.e. the normal direction
-// - a list of N int, i.e. the active taxel ids
-// - a double, i.e. the pressure
-// 
-// ((48725 4 4 5) (-0.017 0.062 -0.036) (0.476424 0.109944 0.611614)
-// (0.0 0.0 0.0) (-0.017 0.062 -0.036) (-0.585 -0.135 -0.751) (134) 16.288001)
 
