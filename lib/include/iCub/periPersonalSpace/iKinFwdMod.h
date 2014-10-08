@@ -1119,7 +1119,7 @@ class iCubCustomLimb : public iKinLimbMod
         }
 
         /**
-        * Appends a pre-defined limb to the chain.
+        * Appends a pre-defined limb to the chain. It allows for a better code re-use.
         */
         void append(const std::string _part);
         

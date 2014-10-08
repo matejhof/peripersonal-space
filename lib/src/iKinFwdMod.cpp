@@ -1804,15 +1804,25 @@ using namespace iCub::ctrl;
         unsigned int iRight;
         double min, max;
 
-        if (getType() == "LtoR")
+        double slaveDOF=-1;
+        if (getType() == "LtoR" || getType() == "RtoL")
         {
-            for (iLeft=0; iLeft<5; iLeft++)
+            slaveDOF = 5;
+        }
+        else if (getType() == "LHtoR" || getType() == "RHtoL")
+        {
+            slaveDOF = 7;
+        }
+
+        if (getType() == "LtoR" || getType() == "LHtoR")
+        {
+            for (iLeft=0; iLeft<slaveDOF; iLeft++)
             {   
                 if (!limLeft.getLimits(iLeft,&min,&max))
                     return false;
                 // printf("old lims %g %g \t", (*this)[4-iLeft].getMin()*CTRL_RAD2DEG, (*this)[4-iLeft].getMax()*CTRL_RAD2DEG);
-                (*this)[4-iLeft].setMin(-CTRL_DEG2RAD*max);
-                (*this)[4-iLeft].setMax(-CTRL_DEG2RAD*min);
+                (*this)[slaveDOF-1-iLeft].setMin(-CTRL_DEG2RAD*max);
+                (*this)[slaveDOF-1-iLeft].setMax(-CTRL_DEG2RAD*min);
                 // printf("new lims %g %g \n", (*this)[4-iLeft].getMin()*CTRL_RAD2DEG, (*this)[4-iLeft].getMax()*CTRL_RAD2DEG);
             }
 
@@ -1827,15 +1837,15 @@ using namespace iCub::ctrl;
                 // printf("old lims %g %g \n", (*this)[iLeft+1+iRight].getMin()*CTRL_RAD2DEG, (*this)[iLeft+1+iRight].getMax()*CTRL_RAD2DEG);
             }
         }
-        else if (getType() == "RtoL")
+        else if (getType() == "RtoL" || getType() == "RHtoL")
         {
-            for (iRight=0; iRight<5; iRight++)
+            for (iRight=0; iRight<slaveDOF; iRight++)
             {   
                 if (!limRight.getLimits(iRight,&min,&max))
                     return false;
                 // printf("old lims %g %g \t", (*this)[4-iLeft].getMin()*CTRL_RAD2DEG, (*this)[4-iLeft].getMax()*CTRL_RAD2DEG);
-                (*this)[4-iRight].setMin(-CTRL_DEG2RAD*max);
-                (*this)[4-iRight].setMax(-CTRL_DEG2RAD*min);
+                (*this)[slaveDOF-1-iRight].setMin(-CTRL_DEG2RAD*max);
+                (*this)[slaveDOF-1-iRight].setMax(-CTRL_DEG2RAD*min);
                 // printf("new lims %g %g \n", (*this)[4-iLeft].getMin()*CTRL_RAD2DEG, (*this)[4-iLeft].getMax()*CTRL_RAD2DEG);
             }
 
@@ -1849,6 +1859,10 @@ using namespace iCub::ctrl;
                 (*this)[iRight+1+iLeft].setMax(CTRL_DEG2RAD*max);
                 // printf("old lims %g %g \n", (*this)[iLeft+1+iRight].getMin()*CTRL_RAD2DEG, (*this)[iLeft+1+iRight].getMax()*CTRL_RAD2DEG);
             }
+        }
+        else
+        {
+            printf("ERROR in alignJointsBounds! Type: %s\n\n", getType().c_str());
         }
 
         return true;
