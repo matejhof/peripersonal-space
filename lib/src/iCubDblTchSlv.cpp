@@ -22,8 +22,25 @@ using namespace iCub::iKin;
     {
         nVars   = limb.getDOF();
         nJoints = limb.getDOF();
-        mLIC = new iCubShoulderConstrMod(limb.asChainMod(),'d', 6); // master shoulder constraints are inverted
-        sLIC = new iCubShoulderConstrMod(limb.asChainMod(),'i', 2); // slave  shoulder constraints are direct
+
+        if (_type == "RtoL" || _type == "LtoR")
+        {
+            // master shoulder constraints are direct, whereas slave shoulder constraints are inverted
+            // The first "inverted" shoulder starts at #2, whereas the "direct" one starts at #6
+            sLIC = new iCubShoulderConstrMod(limb.asChainMod(),'i', 2);
+            mLIC = new iCubShoulderConstrMod(limb.asChainMod(),'d', 6); 
+        }
+        else if (_type == "RHtoL" || _type == "LHtoR")
+        {
+            // Master shoulder constraints are direct, whereas slave shoulder constraints are inverted
+            // Here we have two more joints to begin with, so the slave starts at #4 and the master at #8
+            sLIC = new iCubShoulderConstrMod(limb.asChainMod(),'i', 4);
+            mLIC = new iCubShoulderConstrMod(limb.asChainMod(),'d', 8); 
+        }
+        else
+        {
+            printf("ERROR in configuring the shoulder constraints!! Type: %s\n\n", _type.c_str());
+        }
     }
 
 /************************************************************************/
@@ -31,14 +48,34 @@ using namespace iCub::iKin;
 /************************************************************************/
     iCubDoubleTouch_Problem::iCubDoubleTouch_Problem(string _type)
     {   
-        if (_type == "both")
+        if (_type == "both_5DOF")
         {
             R2L = new iCubDoubleTouch_SubProblem("LtoR","right_index");
             L2R = new iCubDoubleTouch_SubProblem("RtoL","left_index");
         }
+        else if (_type == "both_7DOF")
+        {
+            R2L = new iCubDoubleTouch_SubProblem("LHtoR","right_index");
+            L2R = new iCubDoubleTouch_SubProblem("RHtoL","left_index");
+        }
+        else if (_type == "both_LtoR")
+        {
+            R2L = new iCubDoubleTouch_SubProblem("LtoR", "right_index");
+            L2R = new iCubDoubleTouch_SubProblem("LHtoR","right_index");
+        }
+        else if (_type == "both_RtoL")
+        {
+            R2L = new iCubDoubleTouch_SubProblem("RtoL", "left_index");
+            L2R = new iCubDoubleTouch_SubProblem("RHtoL","left_index");
+        }
         else if (_type == "LtoR")
         {
             R2L = new iCubDoubleTouch_SubProblem("LtoR","right_index");
+            L2R = NULL;
+        }
+        else if (_type == "LHtoR")
+        {
+            R2L = new iCubDoubleTouch_SubProblem("LHtoR","right_index");
             L2R = NULL;
         }
         else if (_type == "RtoL")
@@ -46,8 +83,14 @@ using namespace iCub::iKin;
             R2L = NULL;
             L2R = new iCubDoubleTouch_SubProblem("RtoL","left_index");
         }
+        else if (_type == "RHtoL")
+        {
+            R2L = NULL;
+            L2R = new iCubDoubleTouch_SubProblem("RHtoL","left_index");
+        }
         else
         {
+            printf("ERROR in configuring the kinematic problem!! Type: %s\n\n", _type.c_str());
             R2L = NULL;
             L2R = NULL;
         }

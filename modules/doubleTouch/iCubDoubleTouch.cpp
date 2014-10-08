@@ -132,7 +132,7 @@ public:
 
         robot    = "icubSim";
         name     = "doubleTouch";
-        type     = "LtoR"; // "RtoL" "both"
+        type     = "LtoR";
         filename = ".txt";
         color    = "";
 
@@ -386,7 +386,8 @@ int main(int argc, char * argv[])
         cout << "       record==1 -> recording for visuo-tactile reference frames purposes." << endl;
         cout << "       record==2 -> recording for kinematic calibration purposes." << endl;
         cout << "   --color      color: robot color (black or white - MANDATORY!)" << endl;
-        cout << "   --type       type:  the type of task (default 'R2L')" << endl;
+        cout << "   --type       type:  the type of task (default 'LtoR'). Allowed type names:" << endl;
+        cout << "   --type              'RtoL','LtoR','RHtoL','LHtoR','both_5DOF','both_7DOF','both_LtoR','both_RtoL'" << endl;
         cout << "   --filename   file:  the name of the file to be saved in case of" << endl;
         cout << "                       a recording session. Default 'calibration.txt'." << endl;
         cout << "                       A date is appended at the beginning for completeness." << endl;
