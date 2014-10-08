@@ -90,7 +90,6 @@ protected:
                             // x axis normal to the cover
     int cntctLinkNum;       // Link number
     double cntctPressure;   // Pressure
-    string cntctArm;        // Affected Arm
     skinContact cntctSkin;  // SkinContact
     string cntctSkinPart;   // SkinPart (verbose form)
 
@@ -114,31 +113,24 @@ protected:
     PolyDriver       ddL; // left arm  device driver
     PolyDriver       ddG; // gaze controller  driver
 
-    // "Classical" interfaces - RIGHT ARM
-    IEncoders         *iencsR;
-    IPositionControl  *iposR;
-    IControlMode      *ictrlR;
-    IImpedanceControl *iimpR;
-    IControlLimits    *ilimR;
-    Vector            *encsR;
-    iCubArm           *armR;
-    int jntsR;
-    // "Classical" interfaces - LEFT ARM
-    IEncoders         *iencsL;
-    IPositionControl  *iposL;
-    IControlMode      *ictrlL;
-    IImpedanceControl *iimpL;
-    IControlLimits    *ilimL;
-    Vector            *encsL;
-    iCubArm           *armL;
-    int jntsL;
-
-    // Wrappers (to be arm-agnostic) M = Master S = Slave
-    IPositionControl  *iposM;   IPositionControl  *iposS;
-    IEncoders         *iencsM;  IEncoders         *iencsS;
-    IControlMode      *ictrlM;  IControlMode      *ictrlS;
-    Vector            *encsM;   Vector            *encsS;
-    iCubArm           *armM;    iCubArm           *armS;
+    // "Classical" interfaces - SLAVE ARM
+    IEncoders         *iencsS;
+    IPositionControl  *iposS;
+    IControlMode      *ictrlS;
+    IImpedanceControl *iimpS;
+    IControlLimits    *ilimS;
+    Vector            *encsS;
+    iCubArm           *armS;
+    int jntsS;
+    // "Classical" interfaces - MASTER ARM
+    IEncoders         *iencsM;
+    IPositionControl  *iposM;
+    IControlMode      *ictrlM;
+    IImpedanceControl *iimpM;
+    IControlLimits    *ilimM;
+    Vector            *encsM;
+    iCubArm           *armM;
+    int jntsM;
 
     // Gaze controller interface
     IGazeControl       *igaze;
@@ -149,13 +141,14 @@ protected:
     doubleTouch_Variables *sol;    // solution
     doubleTouch_Solver    *slv;    // solver
     Vector solution;
+    int nDOF;
 
     // CUSTOM LIMB (for testing the achievement of the task)
     iCubCustomLimb *testLimb;
 
     // CHECKMOTIONDONE VARIABLES:
-    Vector oldEER;
-    Vector oldEEL;
+    Vector oldEES;
+    Vector oldEEM;
 
     /**
     * Aligns joint bounds according to the actual limits of the robot
