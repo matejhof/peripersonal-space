@@ -356,10 +356,10 @@ void doubleTouchThread::run()
                 recFlag = 1;
                 break;
             case 3:
-                //if (record != 0)
-                //{
+                if (record != 0)
+                {
                     delay(2);
-                //}
+                }
                 if (record == 0)
                 {
                     goToTaxel();
@@ -384,7 +384,6 @@ void doubleTouchThread::run()
                 break;
             case 6:
                 recFlag = 0;
-                delay(1);
                 
                 bool flag;
                 if (record == 0)
@@ -619,7 +618,7 @@ void doubleTouchThread::solveIK(string s="standard")
 void doubleTouchThread::goToTaxel()
 {
     goToTaxelMaster();
-    delay(1);
+    delay(2);
     goToTaxelSlave();
 }
 
@@ -686,8 +685,8 @@ void doubleTouchThread::detectContact(skinContactList *_sCL)
     {
         if( it -> getPressure() > 25 && skinPart == it -> getSkinPart())
         {
-            cntctSkin = *it;                        // Store the skinContact for eventual future use
-            cntctPosLink  = it -> getCoP();   // Get the position of the contact;
+            cntctSkin     = *it;                    // Store the skinContact for eventual future use
+            cntctPosLink  = it -> getCoP();         // Get the position of the contact;
             cntctLinkNum  = it -> getLinkNumber();  // Retrieve the link number of the contact;
             cntctNormDir  = it -> getNormalDir();   // Normal direction of the contact
             cntctPressure = it -> getPressure();    // Retrieve the pressure of the contact
@@ -708,10 +707,8 @@ void doubleTouchThread::detectContact(skinContactList *_sCL)
             {
                 cntctSkinPart = "hand_right";
             }
-            printMessage(0,"CONTACT!!! skinPart: %s Link: %i Position: %s NormDir: %s\n",
-                            cntctSkinPart.c_str(), cntctLinkNum,cntctPosLink.toString().c_str(),
-                            cntctNormDir.toString().c_str());
-            cntctPosWRF = locateContact(cntctSkin);
+            printMessage(4,"CONTACT!!! skinContact: %s\n",cntctSkin.toString().c_str());
+            cntctPosWRF = locateContact();
             printMessage(2,"cntctPosWRF: %s\n", cntctPosWRF.toString().c_str());
             cntctH0     = findH0(cntctSkin);
             break;
@@ -719,7 +716,7 @@ void doubleTouchThread::detectContact(skinContactList *_sCL)
     }
 }
 
-Vector doubleTouchThread::locateContact(skinContact &sc)
+Vector doubleTouchThread::locateContact()
 {
     Vector result(4,0.0);
     Matrix Twl = armS -> getH(cntctLinkNum+3, true);
@@ -732,16 +729,28 @@ Vector doubleTouchThread::locateContact(skinContact &sc)
 
 Matrix doubleTouchThread::findH0(skinContact &sc)
 {
+    printf("I'm in findH0\n");
     // Set the proper orientation for the touching end-effector
     Matrix H0(4,4);
     Vector x(3,0.0), z(3,0.0), y(3,0.0);
 
     x = sc.getNormalDir();
-    z[0] = -x[2]/x[0]; z[2] = 1;
-    y = -1*(cross(x,z));
-    
-    // Let's make them unitary vectors:
     x = x / norm(x);
+
+    if (type!="LHtoR" && type!="RHtoL")
+    {
+        z[0] = -x[2]/x[0]; z[2] = 1;
+        y = -1*(cross(x,z));
+    }
+    else
+    {
+        // In this case x[0] == 1!
+        // We have to find a diffferent rule:
+        z[1] = x[2];
+        y = -1*(cross(x,z));
+    }
+
+    // Let's make them unitary vectors:
     y = y / norm(y);
     z = z / norm(z);
 
@@ -751,6 +760,7 @@ Matrix doubleTouchThread::findH0(skinContact &sc)
     H0.setSubcol(y,0,1);
     H0.setSubcol(z,0,2);
     H0.setSubcol(sc.getCoP(),0,3);
+    printf("I'm in findH0\n");
     return H0;
 }
 

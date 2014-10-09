@@ -206,9 +206,8 @@ protected:
 
     /**
     * Locates the contact in World Reference Frame's coordinates
-    * @param sc is the skinContact for which the location is computed
     */
-    Vector locateContact(skinContact &sc);
+    Vector locateContact();
 
     /**
     * Find the final configuration for the gaze interface to look at.
