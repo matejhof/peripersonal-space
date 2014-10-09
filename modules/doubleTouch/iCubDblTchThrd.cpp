@@ -157,7 +157,6 @@ bool doubleTouchThread::threadInit()
         {
             ok = ok && ddR.view(iencsM);
             ok = ok && ddR.view(iposM);
-            ok = ok && ddR.view(ictrlM);
             ok = ok && ddR.view(iimpM);
             ok = ok && ddR.view(ilimM);
         }
@@ -168,7 +167,7 @@ bool doubleTouchThread::threadInit()
         {
             ok = ok && ddL.view(iencsS);
             ok = ok && ddL.view(iposS);
-            ok = ok && ddL.view(ictrlS);
+            ok = ok && ddL.view(imodeS);
             ok = ok && ddL.view(iimpS);
             ok = ok && ddL.view(ilimS);
         }
@@ -182,7 +181,7 @@ bool doubleTouchThread::threadInit()
         {
             ok = ok && ddR.view(iencsS);
             ok = ok && ddR.view(iposS);
-            ok = ok && ddR.view(ictrlS);
+            ok = ok && ddR.view(imodeS);
             ok = ok && ddR.view(iimpS);
             ok = ok && ddR.view(ilimS);
         }
@@ -193,7 +192,6 @@ bool doubleTouchThread::threadInit()
         {
             ok = ok && ddL.view(iencsM);
             ok = ok && ddL.view(iposM);
-            ok = ok && ddL.view(ictrlM);
             ok = ok && ddL.view(iimpM);
             ok = ok && ddL.view(ilimM);
         }
@@ -325,7 +323,7 @@ void doubleTouchThread::run()
                         }
                     }
                 }
-                printMessage(0,"*************\nWAITING FOR CONTACT...\n");
+                printMessage(0,"WAITING FOR CONTACT...\n");
                 step++;
                 break;
             case 1:
@@ -342,8 +340,8 @@ void doubleTouchThread::run()
                                         cntctNormDir.toString().c_str());
 
                         printMessage(1,"Switching to impedance position mode..\n");
-                        ictrlS -> setImpedancePositionMode(2);
-                        ictrlS -> setImpedancePositionMode(3);
+                        imodeS -> setInteractionMode(2,VOCAB_IM_COMPLIANT);
+                        imodeS -> setInteractionMode(3,VOCAB_IM_COMPLIANT);
                         step++;
                     }
                 }
@@ -427,11 +425,11 @@ void doubleTouchThread::run()
                 printMessage(0,"Going to rest...\n");
                 goToRest();
                 printMessage(1,"Switching to position mode..\n");
-                ictrlS -> setPositionMode(2);
-                ictrlS -> setPositionMode(3);
+                imodeS -> setInteractionMode(2,VOCAB_IM_STIFF);
+                imodeS -> setInteractionMode(3,VOCAB_IM_STIFF);
                 goToRest();
 
-                printMessage(0,"*************\nWAITING FOR CONTACT...\n");
+                printMessage(0,"WAITING FOR CONTACT...\n");
                 step = 1;
                 break;
             default:
@@ -648,7 +646,7 @@ void doubleTouchThread::goToRest()
     {
         iposS -> positionMove(i,rest[nDOF-7+i]);
     }
-    delay(2);
+    delay(1);
     for (int i = 0; i < 7; i++)
     {
         iposM -> positionMove(i,rest[nDOF-7+i]);
@@ -683,6 +681,7 @@ void doubleTouchThread::detectContact(skinContactList *_sCL)
     // Search for a suitable contact:
     for(skinContactList::iterator it=_sCL->begin(); it!=_sCL->end(); it++)
     {
+        printMessage(4,"skinContact: %s\n",it->toString().c_str());
         if( it -> getPressure() > 25 && skinPart == it -> getSkinPart())
         {
             cntctSkin     = *it;                    // Store the skinContact for eventual future use
@@ -707,7 +706,7 @@ void doubleTouchThread::detectContact(skinContactList *_sCL)
             {
                 cntctSkinPart = "hand_right";
             }
-            printMessage(4,"CONTACT!!! skinContact: %s\n",cntctSkin.toString().c_str());
+            printMessage(3,"CONTACT!!! skinContact: %s\n",cntctSkin.toString().c_str());
             cntctPosWRF = locateContact();
             printMessage(2,"cntctPosWRF: %s\n", cntctPosWRF.toString().c_str());
             cntctH0     = findH0(cntctSkin);
@@ -729,7 +728,6 @@ Vector doubleTouchThread::locateContact()
 
 Matrix doubleTouchThread::findH0(skinContact &sc)
 {
-    printf("I'm in findH0\n");
     // Set the proper orientation for the touching end-effector
     Matrix H0(4,4);
     Vector x(3,0.0), z(3,0.0), y(3,0.0);
@@ -760,7 +758,7 @@ Matrix doubleTouchThread::findH0(skinContact &sc)
     H0.setSubcol(y,0,1);
     H0.setSubcol(z,0,2);
     H0.setSubcol(sc.getCoP(),0,3);
-    printf("I'm in findH0\n");
+
     return H0;
 }
 
@@ -785,10 +783,8 @@ void doubleTouchThread::threadRelease()
 {
     printMessage(0,"Returning to position mode..\n");
         goToRest();
-        ictrlS -> setPositionMode(2);
-        ictrlS -> setPositionMode(3);
-        ictrlM -> setPositionMode(2);
-        ictrlM -> setPositionMode(3);
+        imodeS -> setInteractionMode(2,VOCAB_IM_STIFF);
+        imodeS -> setInteractionMode(3,VOCAB_IM_STIFF);
         goToRest();
 
     printMessage(0,"Closing ports..\n");

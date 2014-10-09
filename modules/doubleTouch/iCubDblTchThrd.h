@@ -116,7 +116,7 @@ protected:
     // "Classical" interfaces - SLAVE ARM
     IEncoders         *iencsS;
     IPositionControl  *iposS;
-    IControlMode      *ictrlS;
+    IInteractionMode  *imodeS;
     IImpedanceControl *iimpS;
     IControlLimits    *ilimS;
     Vector            *encsS;
@@ -125,7 +125,6 @@ protected:
     // "Classical" interfaces - MASTER ARM
     IEncoders         *iencsM;
     IPositionControl  *iposM;
-    IControlMode      *ictrlM;
     IImpedanceControl *iimpM;
     IControlLimits    *ilimM;
     Vector            *encsM;
