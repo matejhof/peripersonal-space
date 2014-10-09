@@ -745,7 +745,7 @@ Matrix doubleTouchThread::findH0(skinContact &sc)
     else
     {
         // In this case x[0] == 1!
-        // We have to find a diffferent rule:
+        // We have to find a different rule:
         z[1] = x[2];
         y = -1*(cross(x,z));
     }
