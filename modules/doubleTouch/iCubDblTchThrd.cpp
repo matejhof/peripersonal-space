@@ -94,10 +94,10 @@ bool doubleTouchThread::threadInit()
     skinPort -> open(("/"+name+"/contacts:i").c_str());
     outPort  -> open(("/"+name+"/status:o").c_str());
 
-    if (robot=="icubSim")
-    {
+    // if (robot=="icubSim")
+    // {
         Network::connect("/skinManager/skin_events:o",("/"+name+"/contacts:i").c_str());
-    }
+    // }
     Network::connect(("/"+name+"/status:o").c_str(),"/visuoTactileRF/input:i");
 
     // Property OptGaze;
@@ -315,7 +315,7 @@ void doubleTouchThread::run()
                     }
                     else if (robot == "icub")
                     {
-                        vels.resize(7,16.0);
+                        vels.resize(7,10.0);
                         for (int i=0; i<7; i++)
                         {
                             iposS->setRefSpeed(i,vels[i]);
@@ -387,7 +387,7 @@ void doubleTouchThread::run()
                 if (record == 0)
                 {
                     // igaze->checkMotionDone(&flag);
-                    Time::delay(2);
+                    Time::delay(3);
                     flag=1;
                     if (flag == 1)
                     {
@@ -624,7 +624,7 @@ void doubleTouchThread::goToTaxelMaster()
 {
     for (int i = 0; i < 7; i++)
     {
-        printMessage(4,"Moving master link #%i to: %g\n",i,solution[nDOF-7+i]);
+        printMessage(3,"Moving master link #%i to: %g\n",i,solution[nDOF-7+i]);
         iposM -> positionMove(i,solution[nDOF-7+i]);
     }
 }
@@ -633,7 +633,7 @@ void doubleTouchThread::goToTaxelSlave()
 {
     for (int i = 0; i < nDOF-7; i++)
     {
-        printMessage(4,"Moving slave link #%i to: %g\n",nDOF-7-1-i,-solution[i]);
+        printMessage(3,"Moving slave link #%i to: %g\n",nDOF-7-1-i,-solution[i]);
         iposS -> positionMove(nDOF-7-1-i,-solution[i]);
     }
 }
@@ -646,7 +646,7 @@ void doubleTouchThread::goToRest()
     {
         iposS -> positionMove(i,rest[nDOF-7+i]);
     }
-    delay(1);
+    delay(3);
     for (int i = 0; i < 7; i++)
     {
         iposM -> positionMove(i,rest[nDOF-7+i]);
