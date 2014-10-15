@@ -50,9 +50,9 @@ private:
     RpcClient             rpcClnt;
     RpcServer             rpcSrvr;
 
-    string robot,name,type,filename,color;
+    string robot,name;
 
-    int verbosity,rate,record;
+    int verbosity,rate;
 
 public:
     tactileServoing()
@@ -61,13 +61,9 @@ public:
 
         robot    = "icubSim";
         name     = "tactileServoing";
-        type     = "LtoR";
-        filename = ".txt";
-        color    = "";
 
         verbosity = 0;      // verbosity
         rate      = 100;    // rate of the tactileServoThread
-        record    = 0;      // record data
     }
 
     bool respond(const Bottle &command, Bottle &reply)
@@ -180,18 +176,6 @@ int main(int argc, char * argv[])
         cout << "   --robot      robot: the name of the robot. Default icubSim." << endl;
         cout << "   --rate       rate:  the period used by the thread. Default 100ms." << endl;
         cout << "   --verbosity  int:   verbosity level (default 0)." << endl;
-        cout << "   --record     int:   if to record data or not." << endl;
-        cout << "       record==0 -> nothing is recorded, the double touch is iterating over and" << endl;
-        cout << "                    over again. Demonstrative and testing purposes." << endl;
-        cout << "       record==1 -> recording for visuo-tactile reference frames purposes." << endl;
-        cout << "       record==2 -> recording for kinematic calibration purposes." << endl;
-        cout << "   --color      color: robot color (black or white - MANDATORY!)" << endl;
-        cout << "   --type       type:  the type of task (default 'LtoR'). Allowed type names:" << endl;
-        cout << "   --type              'RtoL','LtoR','RHtoL','LHtoR','both_5DOF','both_7DOF','both_LtoR','both_RtoL'" << endl;
-        cout << "   --filename   file:  the name of the file to be saved in case of" << endl;
-        cout << "                       a recording session. Default 'calibration.txt'." << endl;
-        cout << "                       A date is appended at the beginning for completeness." << endl;
-        cout << "   --alignEyes  flag:  if or not to use the rpc-thing and sync with alignEyes module." << endl;
         cout << endl;
         return 0;
     }
@@ -203,7 +187,7 @@ int main(int argc, char * argv[])
         return -1;
     }
 
-    tactileServoing dblTch;
-    return dblTch.runModule(rf);
+    tactileServoing tctSrvMod;
+    return tctSrvMod.runModule(rf);
 }
 // empty line to make gcc happy
