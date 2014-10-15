@@ -1797,9 +1797,6 @@ using namespace iCub::ctrl;
         if (lim.size()<2)
             return false;
 
-        IControlLimits &limLeft =*lim[0];
-        IControlLimits &limRight=*lim[1];
-
         unsigned int iLeft;
         unsigned int iRight;
         double min, max;
@@ -1816,6 +1813,8 @@ using namespace iCub::ctrl;
 
         if (getType() == "LtoR" || getType() == "LHtoR")
         {
+            IControlLimits &limLeft =*lim[0];
+            IControlLimits &limRight=*lim[1];
             for (iLeft=0; iLeft<slaveDOF; iLeft++)
             {   
                 if (!limLeft.getLimits(iLeft,&min,&max))
@@ -1839,6 +1838,8 @@ using namespace iCub::ctrl;
         }
         else if (getType() == "RtoL" || getType() == "RHtoL")
         {
+            IControlLimits &limLeft =*lim[1];
+            IControlLimits &limRight=*lim[0];
             for (iRight=0; iRight<slaveDOF; iRight++)
             {   
                 if (!limRight.getLimits(iRight,&min,&max))

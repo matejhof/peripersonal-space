@@ -243,7 +243,7 @@ public:
                 type = rf.find("type").asString();
                 cout << "Type is: " << type << endl;
             }
-            else cout << "Could not find Type option in the config file; using "
+            else cout << "Could not find type option in the config file; using "
                       << type << " as default\n";
 
         //******************* VERBOSE ******************
