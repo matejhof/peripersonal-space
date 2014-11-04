@@ -1,4 +1,4 @@
-# Copyright: (C) 2013 RobotCub Consortium
+# Copyright: (C) 2013 iCub Facility
 # Author: Alessandro Roncone
 # CopyPolicy: Released under the terms of the GNU GPL v2.0.
 
@@ -10,6 +10,7 @@ add_subdirectory(visuoTactileWrapper)
 add_subdirectory(demoAvoidance)
 add_subdirectory(ultimateTracker)
 add_subdirectory(tactileServoing)
+add_subdirectory(fingertipTracker)
 #add_subdirectory(selfCalibration)
 #add_subdirectory(sceneFlowMod)
 #add_subdirectory(alignEyes)
