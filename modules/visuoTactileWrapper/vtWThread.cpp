@@ -186,9 +186,14 @@ void vtWThread::run()
                 fingertipPos = matrixFromBottle(*doubleTouchBottle,20,4,4).subcol(0,3,3); // fixed translation from the palm
                 fingertipPos.push_back(1.0);
 
-                if((doubleTouchStep>3) && (doubleTouchStep<7))
+                if(doubleTouchStep<=1)
                 {
-                    if(currentTask=="R2L") //right to left -> the right index finger will be generating events
+                    Vector ang(3,0.0);
+                    igaze -> lookAtAbsAngles(ang);
+                }
+                else if(doubleTouchStep>1 && doubleTouchStep<7)
+                {
+                    if(currentTask=="LtoR" || currentTask=="LHtoR") //right to left -> the right index finger will be generating events
                     { 
                         iencsR->getEncoders(encsR->data());
                         Vector qR=encsR->subVector(0,6);
@@ -199,7 +204,7 @@ void vtWThread::run()
                         //http://wiki.icub.org/iCub/main/dox/html/icub_cartesian_interface.html#sec_cart_tipframe
                         doubleTouchPos.pop_back(); //take out the last dummy value from homogenous form
                     }
-                    else if(currentTask=="L2R") //left to right -> the left index finger will be generating events
+                    else if(currentTask=="RtoL" || currentTask=="RHtoL") //left to right -> the left index finger will be generating events
                     {   
                         iencsL->getEncoders(encsL->data());
                         Vector qL=encsL->subVector(0,6);
@@ -212,7 +217,7 @@ void vtWThread::run()
                     } 
                     else
                     {
-                        printMessage(0,"\nERROR: vtWThread::run(): Unknown task received from double touch thread!\n");
+                        yError(" vtWThread::run(): Unknown task received from double touch thread!");
                     }
                                    
                     AWPolyElement el2(doubleTouchPos,Time::now());

@@ -1773,13 +1773,13 @@ using namespace iCub::ctrl;
             q[1]  = -qs[5];
             q[0]  = -qs[6];
            
-            q[5]  = qm[0];
-            q[6]  = qm[1];
-            q[7]  = qm[2];
-            q[8]  = qm[3];
-            q[9]  = qm[4];
-            q[10] = qm[5];
-            q[11] = qm[6];
+            q[7]  = qm[0];
+            q[8]  = qm[1];
+            q[9]  = qm[2];
+            q[10] = qm[3];
+            q[11] = qm[4];
+            q[12] = qm[5];
+            q[13] = qm[6];
 
             Vector nq = iKinLimbMod::setAng(q);
             return nq;   

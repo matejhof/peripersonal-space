@@ -99,6 +99,7 @@ bool doubleTouchThread::threadInit()
         Network::connect("/skinManager/skin_events:o",("/"+name+"/contacts:i").c_str());
     // }
     Network::connect(("/"+name+"/status:o").c_str(),"/visuoTactileRF/input:i");
+    Network::connect(("/"+name+"/status:o").c_str(),"/visuoTactileWrapper/doubleTouch:i");
 
     // Property OptGaze;
     // OptGaze.put("device","gazecontrollerclient");
@@ -120,7 +121,7 @@ bool doubleTouchThread::threadInit()
     OptL.put("local", ("/"+name +"/left_arm").c_str());
 
     // if ((!ddG.open(OptGaze)) || (!ddG.view(igaze))){
-    //    printMessage(0,"Error: could not open the Gaze Controller!\n");
+    //    yError(" Could not open the Gaze Controller!");
     //    return false;
     // }
 
@@ -139,12 +140,12 @@ bool doubleTouchThread::threadInit()
 
     if (!ddR.open(OptR))
     {
-        printMessage(0,"ERROR: could not open right_arm PolyDriver!\n");
+        yError(" Could not open right_arm PolyDriver!");
         return false;
     }
     if (!ddL.open(OptL))
     {
-        printMessage(0,"ERROR: could not open left_arm PolyDriver!\n");
+        yError(" Could not open left_arm PolyDriver!");
         return false;
     }
 
@@ -239,7 +240,7 @@ bool doubleTouchThread::threadInit()
     Matrix HIndex=slv->probl->index.getH(joints*CTRL_DEG2RAD);
     slv->probl->limb.setHN(HIndex);
     testLimb->setHN(HIndex);
-    printMessage(1,"HIndex:\n%s\n", HIndex.toString().c_str());
+    printMessage(1,"HIndex:\n%s\n", HIndex.toString(3,3).c_str());
 
     return true;
 }
@@ -329,15 +330,15 @@ void doubleTouchThread::run()
             case 1:
                 if(skinContacts)
                 {
-                    printMessage(3,"Waiting for contact..\n");
+                    printMessage(4,"Waiting for contact..\n");
                     detectContact(skinContacts); // READ A CONTACT ON THE SKIN
                     if (cntctSkinPart != "")
                     {
-                        // printMessage(0,"CONTACT!!! skinContact: %s\nskinPart: %s Link: %i Position: %s NormDir: %s\n", cntctSkin.toString().c_str(),
-                        //             cntctSkinPart.c_str(), cntctLinkNum,cntctPosLink.toString().c_str(),cntctNormDir.toString().c_str());
-                        printMessage(0,"CONTACT!!! skinPart: %s Link: %i Position: %s NormDir: %s\n",
-                                        cntctSkinPart.c_str(), cntctLinkNum,cntctPosLink.toString().c_str(),
-                                        cntctNormDir.toString().c_str());
+                        // printMessage(0,"CONTACT!!! skinContact: %s\nskinPart: %s Link: %i Position: %s NormDir: %s\n", cntctSkin.toString(3,3).c_str(),
+                        //             cntctSkinPart.c_str(), cntctLinkNum,cntctPosLink.toString(3,3).c_str(),cntctNormDir.toString(3,3).c_str());
+                        yInfo("CONTACT!!! skinPart: %s Link: %i Position: %s NormDir: %s",
+                               cntctSkinPart.c_str(), cntctLinkNum,cntctPosLink.toString(3,3).c_str(),
+                               cntctNormDir.toString(3,3).c_str());
 
                         printMessage(1,"Switching to impedance position mode..\n");
                         imodeS -> setInteractionMode(2,VOCAB_IM_COMPLIANT);
@@ -348,8 +349,8 @@ void doubleTouchThread::run()
                 break;
             case 2:
                 solveIK();
-                printMessage(0,"Going to taxel... Desired EE: %s\n",(sol->ee).toString().c_str());
-                printMessage(2,"jnts=%s\n",(sol->joints*CTRL_RAD2DEG).toString().c_str());
+                printMessage(0,"Going to taxel... Desired EE: %s\n",(sol->ee).toString(3,3).c_str());
+                printMessage(2,"jnts=%s\n",(sol->joints*CTRL_RAD2DEG).toString(3,3).c_str());
                 step++;
                 recFlag = 1;
                 break;
@@ -489,19 +490,19 @@ bool doubleTouchThread::testAchievement2(skinContactList *_sCL)
             * INDEX HN
             */
             printMessage(0,"SUCCESS!!!! Self Touch Accomplished! Iterator: %i\n",iter);
-            printMessage(1,"Encoders Slave:  %s\n", qS.toString().c_str());
-            printMessage(1,"Encoders Master: %s\n", qM.toString().c_str());
-            printMessage(0,"Target Position: %s\n", cntctH0.subcol(0,3,3).toString().c_str());
-            printMessage(0,"Final  Position: %s\n", cntctH0_final.subcol(0,3,3).toString().c_str());
+            printMessage(1,"Encoders Slave:  %s\n", qS.toString(3,3).c_str());
+            printMessage(1,"Encoders Master: %s\n", qM.toString(3,3).c_str());
+            printMessage(0,"Target Position: %s\n", cntctH0.subcol(0,3,3).toString(3,3).c_str());
+            printMessage(0,"Final  Position: %s\n", cntctH0_final.subcol(0,3,3).toString(3,3).c_str());
 
             ofstream outputfile;
             outputfile.open (filename.c_str(),ios::app);
             outputfile  << iter << "\t" << fixed << Time::now() << "\t"
                         << robot  << "\t" << color << "\t" << type << "\t"
-                        << qS.toString() << "\t" << qM.toString() << "\t"
-                        << toVector(cntctH0).toString() << "\t"
-                        << toVector(cntctH0_final).toString();
-            outputfile  << "\t" << toVector(slv->probl->limb.getHN()).toString();
+                        << qS.toString(3,3) << "\t" << qM.toString(3,3) << "\t"
+                        << toVector(cntctH0).toString(3,3) << "\t"
+                        << toVector(cntctH0_final).toString(3,3);
+            outputfile  << "\t" << toVector(slv->probl->limb.getHN()).toString(3,3);
             outputfile  << endl;
             outputfile.close();
             iter++;
@@ -516,6 +517,23 @@ bool doubleTouchThread::checkMotionDone()
 {
     if (step == 1 || step == 7 || step == 8 || (record == 0 && (step == 4 || step == 5)))
         return true;
+
+    // int nJnts = 7;
+    // std::vector<bool> cmdM;
+    // std::vector<bool> cmdS;
+    // std::vector<int> EjointsS;
+    // std::vector<int> EjointsM;
+
+    // for (int i = 0; i < 7; i++)
+    // {
+    //     EjointsM.push_back(i);
+    //     EjointsS.push_back(i);
+    //     cmdM.push_back(false);
+    //     cmdS.push_back(false);
+    // }
+
+    // iposS->checkMotionDone(nJnts,EjointsS.data(),cmdS.data());
+    // iposM->checkMotionDone(nJnts,EjointsM.data(),cmdM.data());
     
     iencsS->getEncoders(encsS->data());
     Vector qS=encsS->subVector(0,6);
@@ -529,7 +547,7 @@ bool doubleTouchThread::checkMotionDone()
 
     double normS = norm(eeS - oldEES);
     double normM = norm(eeM - oldEEM);
-    printMessage(1,"step: %i  result: %i  normS: %g\tnormM: %g\n", step,
+    printMessage(4,"step: %i  result: %i  normS: %g\tnormM: %g\n", step,
         (normS <= VEL_THRES * getRate()) && (normM <= VEL_THRES * getRate()), normS, normM);
 
     oldEES = eeS;
@@ -562,7 +580,7 @@ void doubleTouchThread::handleGaze()
     // else if (record && step == 3)
     // {
     //     cntctPosWRF = findFinalConfiguration();
-    //     printMessage(1,"cntctPosWRF: %s\n", cntctPosWRF.toString().c_str());
+    //     printMessage(1,"cntctPosWRF: %s\n", cntctPosWRF.toString(3,3).c_str());
     //     igaze -> lookAtFixationPoint(cntctPosWRF);
     //     if (robot == "icub")
     //         igaze -> waitMotionDone();
@@ -580,8 +598,8 @@ void doubleTouchThread::handleGaze()
 Vector doubleTouchThread::findFinalConfiguration()
 {
     Vector q=solution.subVector(nDOF-1-7,nDOF-1);
-    // cout << "q: " << q.toString() << endl;
-    // cout << "q: " << (CTRL_RAD2DEG*(armM -> setAng(q*CTRL_DEG2RAD))).toString() << endl;
+    // cout << "q: " << q.toString(3,3) << endl;
+    // cout << "q: " << (CTRL_RAD2DEG*(armM -> setAng(q*CTRL_DEG2RAD))).toString(3,3) << endl;
     armM -> setAng(q*CTRL_DEG2RAD);
     return armM -> EndEffPosition();
 }
@@ -592,15 +610,15 @@ void doubleTouchThread::testAchievement()
     iencsS->getEncoders(encsS->data());
 
     testLimb->setAng((*encsS)*CTRL_DEG2RAD,(*encsM)*CTRL_DEG2RAD);
-    printMessage(0,"                 Final EE    %s\n", testLimb->EndEffPosition().toString().c_str());
-    printMessage(2,"jnts=%s\n",(testLimb->getAng()*CTRL_RAD2DEG).toString().c_str());
+    printMessage(0,"Final EE    %s\n", testLimb->EndEffPosition().toString(3,3).c_str());
+    printMessage(2,"jnts=%s\n",(testLimb->getAng()*CTRL_RAD2DEG).toString(3,3).c_str());
 }
 
 void doubleTouchThread::solveIK(string s="standard")
 {
     cntctH0 = findH0(cntctSkin);
 
-    printMessage(2,"H0: \n%s\n",cntctH0.toString().c_str());
+    printMessage(2,"H0: \n%s\n",cntctH0.toString(3,3).c_str());
     slv->probl->limb.setH0(SE3inv(cntctH0));
     testLimb->setH0(SE3inv(cntctH0));
 
@@ -622,11 +640,18 @@ void doubleTouchThread::goToTaxel()
 
 void doubleTouchThread::goToTaxelMaster()
 {
+    int nJnts = 7;
+    Vector qM(nJnts,0.0);
+    std::vector<int> Ejoints;
+
     for (int i = 0; i < 7; i++)
     {
-        printMessage(3,"Moving master link #%i to: %g\n",i,solution[nDOF-7+i]);
-        iposM -> positionMove(i,solution[nDOF-7+i]);
+        Ejoints.push_back(i);
+        qM[i] = solution[nDOF-7+i];
+        printMessage(3,"Moving master link #%i to: %g\n",i,qM[i]);
     }
+
+    iposM -> positionMove(nJnts,Ejoints.data(),qM.data());
 }
 
 void doubleTouchThread::goToTaxelSlave()
@@ -708,7 +733,7 @@ void doubleTouchThread::detectContact(skinContactList *_sCL)
             }
             printMessage(3,"CONTACT!!! skinContact: %s\n",cntctSkin.toString().c_str());
             cntctPosWRF = locateContact();
-            printMessage(2,"cntctPosWRF: %s\n", cntctPosWRF.toString().c_str());
+            printMessage(2,"cntctPosWRF: %s\n", cntctPosWRF.toString(3,3).c_str());
             cntctH0     = findH0(cntctSkin);
             break;
         }
@@ -771,8 +796,8 @@ int doubleTouchThread::printMessage(const int l, const char *f, ...) const
         va_list ap;
         va_start(ap,f);
         int ret=vfprintf(stdout,f,ap);
-        va_end(ap);
-
+        va_end(ap)
+;
         return ret;
     }
     else
