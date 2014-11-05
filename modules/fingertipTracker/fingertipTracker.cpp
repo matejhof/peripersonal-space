@@ -64,7 +64,10 @@ Linux (Ubuntu 12.04, Debian Squeeze, Debian Wheezy).
 \author: Alessandro Roncone and Ugo Pattacini
 */ 
 
-#include <yarp/os/all.h>
+#include <yarp/os/RateThread.h>
+#include <yarp/os/BufferedPort.h>
+#include <yarp/os/RFModule.h>
+#include <yarp/os/Log.h>
 #include <string> 
 
 #include "fgtThread.h"
@@ -137,7 +140,7 @@ public:
         robot = "icub";
 
         verbosity   =   0;   // verbosity
-        rate        =  10;   // rate of the thread [ms]
+        rate        =  20;   // rate of the thread [ms]
 
         //******************************************************
         //********************** CONFIGS ***********************

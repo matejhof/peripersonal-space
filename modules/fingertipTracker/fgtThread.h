@@ -25,7 +25,7 @@
 #include <yarp/os/Time.h>
 #include <yarp/os/RateThread.h>
 #include <yarp/os/BufferedPort.h>
-#include <yarp/os/RFModule.h>
+#include <yarp/os/Log.h>
 
 #include <yarp/sig/Vector.h>
 #include <yarp/sig/Matrix.h>
@@ -64,12 +64,25 @@ protected:
     int    stateFlag;
     double timeNow;
 
-    Port imagePortInR;           // port for reading images
-    Port imagePortInL;           // port for reading images
-    Port imagePortOutR;          // port for streaming images
-    Port imagePortOutL;          // port for streaming images
+    BufferedPort<ImageOf<PixelRgb> > imagePortInR;   // port for reading images
+    BufferedPort<ImageOf<PixelRgb> > imagePortInL;   // port for reading images
+    BufferedPort<ImageOf<PixelMono> > imagePortOutR;  // port for streaming images
+    BufferedPort<ImageOf<PixelMono> > imagePortOutL;  // port for streaming images
     ImageOf<PixelRgb> *imageInR;
     ImageOf<PixelRgb> *imageInL;
+    ImageOf<PixelMono> imageOutR;
+    ImageOf<PixelMono> imageOutL;
+
+    BufferedPort<Bottle>  doubleTouchPort;           // input from the doubleTouch
+    Bottle               *doubleTouchBottle;
+    int doubleTouchStep;                             // the step the doubleTouch is in
+
+    BufferedPort<Bottle>  outPort;                   // output the doubleTouch
+
+
+    bool processImages(ImageOf<PixelMono> &_oL, ImageOf<PixelMono> &_oR);
+    bool sendImages();
+    bool sendFinger();
 
     /**
     * Prints a message according to the verbosity level:
