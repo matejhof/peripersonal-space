@@ -5,6 +5,9 @@ fgtThread::fgtThread(int _rate, const string &_name, const string &_robot, int _
 {
     stateFlag = 0;
     timeNow   = yarp::os::Time::now();
+
+    fingerL.resize(2,0.0);
+    fingerR.resize(2,0.0);
 }
 
 bool fgtThread::threadInit()
@@ -115,7 +118,7 @@ bool fgtThread::processImages(ImageOf<PixelRgb> &_oL, ImageOf<PixelRgb> &_oR)
 
     // The mask could have more than one blob: find the biggest one
     // (hopefully the fingertip)
-    yDebug("Let's find the biggest contour");
+    yTrace("Let's find the biggest contour");
     vector<vector<cv::Point> > contours;
     double area = -1;
     cv::RotatedRect rect;
@@ -142,6 +145,9 @@ bool fgtThread::processImages(ImageOf<PixelRgb> &_oL, ImageOf<PixelRgb> &_oR)
             // 5d: Find the center of mass of the biggest contour
             rect=cv::fitEllipse(contours[idx]);
             cv::Point fgtL=rect.center;
+            fingerL[0] = fgtL.x;
+            fingerL[1] = fgtL.y;
+
             cv::ellipse(imgL, rect, cv::Scalar(40,50,50), 2);
             cv::circle(imgL, fgtL, 3, cv::Scalar(175,125,0), -1);
         }
@@ -165,13 +171,16 @@ bool fgtThread::processImages(ImageOf<PixelRgb> &_oL, ImageOf<PixelRgb> &_oR)
             }
         }
 
-        if (largestArea>12)
+        if (largestArea>16)
         {
             // 5d: Find the center of mass of the biggest contour
             rect=cv::fitEllipse(contours[idx]);
             cv::Point fgtR=rect.center;
+            fingerR[0] = fgtR.x;
+            fingerR[1] = fgtR.y;
+
             cv::ellipse(imgR, rect, cv::Scalar(40,50,50), 2);
-            cv::circle(imgR, fgtR, 3, cv::Scalar(175,125,0), -1);
+            cv::circle (imgR, fgtR, 3, cv::Scalar(175,125,0), -1);
         }
     }
 

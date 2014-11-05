@@ -79,6 +79,9 @@ protected:
 
     BufferedPort<Bottle>  outPort;                   // output the doubleTouch
 
+    Vector fingerL;
+    Vector fingerR;
+
 
     bool processImages(ImageOf<PixelRgb> &_oL, ImageOf<PixelRgb> &_oR);
     bool sendImages();
