@@ -1,13 +1,20 @@
 #include "fgtThread.h"
 
-fgtThread::fgtThread(int _rate, const string &_name, const string &_robot, int _v) :
-                       RateThread(_rate), name(_name), robot(_robot), verbosity(_v)
+fgtThread::fgtThread(int _rate, const string &_name, const string &_robot, int _v,
+                     const Vector &_hsvmin, const Vector &_hsvmax) :
+                     RateThread(_rate), name(_name), robot(_robot), verbosity(_v)
 {
     stateFlag = 0;
     timeNow   = yarp::os::Time::now();
 
     fingerL.resize(2,0.0);
     fingerR.resize(2,0.0);
+
+    HSVmin.resize(3,0.0);
+    HSVmax.resize(3,0.0);
+
+    HSVmin = _hsvmin;
+    HSVmax = _hsvmax;
 }
 
 bool fgtThread::threadInit()
@@ -43,7 +50,7 @@ bool fgtThread::threadInit()
     OptGaze.put("local",("/"+name+"/gaze").c_str());
 
     if ((!ddG.open(OptGaze)) || (!ddG.view(igaze))){
-       printMessage(0,"Error: could not open the Gaze Controller!\n");
+       yError("could not open the Gaze Controller!\n");
        return false;
     }
 
@@ -84,9 +91,18 @@ void fgtThread::run()
                         if (imageInL!=NULL && imageInR!=NULL)
                         {
                             yTrace("Processing images..");
-                            processImages(imageOutL,imageOutR);
+
+                            if (processImages(imageOutL,imageOutR))
+                            {
+                                sendFinger();    
+                            }
+                            else
+                            {
+                                yTrace("finger not found. fingerL: %s fingerR: %s",
+                                        fingerL.toString(3,3).c_str(),fingerR.toString(3,3).c_str());
+                            }
+                            
                             sendImages();
-                            sendFinger();
                         }
     //             }
     //         }
@@ -96,6 +112,9 @@ void fgtThread::run()
 
 bool fgtThread::processImages(ImageOf<PixelRgb> &_oL, ImageOf<PixelRgb> &_oR)
 {
+    bool resultL = false;
+    bool resultR = false;
+
     _oR.resize(*imageInR);
     _oL.resize(*imageInL);
     // 
@@ -119,8 +138,8 @@ bool fgtThread::processImages(ImageOf<PixelRgb> &_oL, ImageOf<PixelRgb> &_oR)
     cvtColor(imgR,imgRHSV,CV_BGR2HSV);
 
     yTrace("I'm filtering according to the HSV");
-    cv::inRange(imgLHSV, cv::Scalar(40,50,50), cv::Scalar(60,255,255),mskL);
-    cv::inRange(imgRHSV, cv::Scalar(40,50,50), cv::Scalar(80,255,255),mskR);
+    cv::inRange(imgLHSV, cv::Scalar(HSVmin[0],HSVmin[1],HSVmin[2]), cv::Scalar(HSVmax[0],HSVmax[1],HSVmax[2]),mskL);
+    cv::inRange(imgRHSV, cv::Scalar(HSVmin[0],HSVmin[1],HSVmin[2]), cv::Scalar(HSVmax[0],HSVmax[1],HSVmax[2]),mskR);
 
     yTrace("I'm blurring them in order to remove noise.");
     medianBlur(mskL, mskL, 5);
@@ -150,9 +169,8 @@ bool fgtThread::processImages(ImageOf<PixelRgb> &_oL, ImageOf<PixelRgb> &_oR)
             }
         }
 
-        if (largestArea>12)
+        if (largestArea>16)
         {
-            // 5d: Find the center of mass of the biggest contour
             rect=cv::fitEllipse(contours[idx]);
             cv::Point fgtL=rect.center;
             fingerL[0] = fgtL.x;
@@ -160,6 +178,7 @@ bool fgtThread::processImages(ImageOf<PixelRgb> &_oL, ImageOf<PixelRgb> &_oR)
 
             cv::ellipse(imgL, rect, cv::Scalar(40,50,50), 2);
             cv::circle(imgL, fgtL, 3, cv::Scalar(175,125,0), -1);
+            resultL = true;
         }
     }
 
@@ -183,7 +202,6 @@ bool fgtThread::processImages(ImageOf<PixelRgb> &_oL, ImageOf<PixelRgb> &_oR)
 
         if (largestArea>16)
         {
-            // 5d: Find the center of mass of the biggest contour
             rect=cv::fitEllipse(contours[idx]);
             cv::Point fgtR=rect.center;
             fingerR[0] = fgtR.x;
@@ -191,13 +209,14 @@ bool fgtThread::processImages(ImageOf<PixelRgb> &_oL, ImageOf<PixelRgb> &_oR)
 
             cv::ellipse(imgR, rect, cv::Scalar(40,50,50), 2);
             cv::circle (imgR, fgtR, 3, cv::Scalar(175,125,0), -1);
+            resultR = true;
         }
     }
 
     _oL = imageOL;
     _oR = imageOR;
 
-    return true;
+    return resultL && resultR;
 }
 
 bool fgtThread::sendImages()
@@ -213,13 +232,26 @@ bool fgtThread::sendImages()
 
 bool fgtThread::sendFinger()
 {
-    Vector 3DPoint(3,0.0);
+    yarp::sig::Vector x(3,0.0);
 
-    igaze->triangulate3DPoint(fingerL, fingerR, 3DPoint);
+    igaze->triangulate3DPoint(fingerL, fingerR, x);
 
-    yDebug("3D point found! %s",3DPoint.toString().c_str());
+    yTrace("3D point found! %s fingerL: %s fingerR: %s",x.toString(3,3).c_str(),
+            fingerL.toString(3,3).c_str(),fingerR.toString(3,3).c_str());
 
 
+}
+
+void fgtThread::setHMax(int _val)
+{
+    HSVmax[0]=double(_val);
+    yInfo("Setting hmax to %i. Result %g", _val, HSVmax[0]);
+}
+
+void fgtThread::setHMin(int _val)
+{
+    HSVmin[0]=double(_val);
+    yInfo("Setting hmin to %i. Result %g", _val, HSVmin[0]);
 }
 
 int fgtThread::printMessage(const int l, const char *f, ...) const
@@ -242,8 +274,6 @@ int fgtThread::printMessage(const int l, const char *f, ...) const
 void fgtThread::threadRelease()
 {
     printMessage(0,"Closing gaze controller..\n");
-        Vector ang(3,0.0);
-        igaze -> lookAtAbsAngles(ang);
         igaze -> restoreContext(contextGaze);
         igaze -> stopControl();
         ddG.close();

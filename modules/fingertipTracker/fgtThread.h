@@ -45,6 +45,8 @@
 #include <highgui.h>
 #include <iCub/periPersonalSpace/utils.h>
 
+YARP_DECLARE_DEVICES(icubmod)
+
 using namespace yarp;
 using namespace yarp::sig;
 using namespace yarp::dev;
@@ -87,9 +89,12 @@ protected:
     Vector fingerL;
     Vector fingerR;
 
+    Vector HSVmin;
+    Vector HSVmax;
+
     // Gaze Controller
     PolyDriver       ddG; // gaze  controller  driver
-    IGazeControl    *igaze;
+    IGazeControl  *igaze;
     int contextGaze;
 
     bool processImages(ImageOf<PixelRgb> &_oL, ImageOf<PixelRgb> &_oR);
@@ -105,13 +110,16 @@ protected:
     
 public:
     // CONSTRUCTOR
-    fgtThread(int _rate, const string &_name, const string &_robot, int _v);
+    fgtThread(int _rate, const string &_name, const string &_robot, int _v, const Vector &_hsvmin, const Vector &_hsvmax);
     // INIT
     virtual bool threadInit();
     // RUN
     virtual void run();
     // RELEASE
     virtual void threadRelease();
+
+    void setHMin(int _val);
+    void setHMax(int _val);
 };
 
 #endif

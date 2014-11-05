@@ -72,6 +72,8 @@ Linux (Ubuntu 12.04, Debian Squeeze, Debian Wheezy).
 
 #include "fgtThread.h"
 
+YARP_DECLARE_DEVICES(icubmod)
+
 using namespace yarp;
 using namespace yarp::os;
 using namespace std;
@@ -88,7 +90,7 @@ private:
     fgtThread *fgtThrd;
 
     // RpcClient  rpcClnt;
-    // RpcServer  rpcSrvr;
+    RpcServer  rpcSrvr;
 
     string robot;
     string name;
@@ -111,18 +113,21 @@ public:
             switch (command.get(0).asVocab())
             {
                 //-----------------
-                case VOCAB4('s','a','v','e'):
+                case VOCAB3('s','e','t'):
                 {
-                    // int res=Vocab::encode("saved");
-                    // if (fgtThrd -> save())
-                    // {
-                    //     reply.addVocab(ack);
-                    // }
-                    // else
-                    //     reply.addVocab(nack);
-                    
-                    // reply.addVocab(res);
-                    // return true;
+                    reply.addString(command.get(1).asString());
+
+                    if (command.get(1).asString() == "hmin")
+                    {
+                        fgtThrd -> setHMin(command.get(2).asInt());
+                        reply.addVocab(ack);
+                    }
+                    else if (command.get(1).asString() == "hmax")
+                    {
+                        fgtThrd -> setHMax(command.get(2).asInt());
+                        reply.addVocab(ack);
+                    }
+                    return true;
                 }
                 //-----------------
                 default:
@@ -180,7 +185,19 @@ public:
 
         //******************************************************
         //*********************** THREADS **********************
-            fgtThrd = new fgtThread(rate, name, robot, verbosity);
+            Vector HSVmin(3,0.0);
+            Vector HSVmax(3,0.0);
+
+            HSVmin[0] = 40.0;
+            HSVmin[1] = 50.0;
+            HSVmin[2] = 150.0;
+
+            HSVmax[0] = 80.0;
+            HSVmax[1] = 255.0;
+            HSVmax[2] = 255.0;
+
+
+            fgtThrd = new fgtThread(rate, name, robot, verbosity, HSVmin, HSVmax);
             if (!fgtThrd -> start())
             {
                 delete fgtThrd;
@@ -193,8 +210,8 @@ public:
         //******************************************************
         //************************ PORTS ***********************
             // rpcClnt.open(("/"+name+"/rpc:o").c_str());
-            // rpcSrvr.open(("/"+name+"/rpc:i").c_str());
-            // attach(rpcSrvr);
+            rpcSrvr.open(("/"+name+"/rpc:i").c_str());
+            attach(rpcSrvr);
 
         return true;
     }
@@ -228,6 +245,8 @@ public:
 */
 int main(int argc, char * argv[])
 {
+    YARP_REGISTER_DEVICES(icubmod)
+
     ResourceFinder moduleRF;
     moduleRF.setVerbose(false);
     moduleRF.setDefaultContext("periPersonalSpace");
