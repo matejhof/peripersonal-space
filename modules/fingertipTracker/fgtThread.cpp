@@ -81,36 +81,102 @@ bool fgtThread::sendFinger()
 
 }
 
-bool fgtThread::processImages(ImageOf<PixelMono> &_oL, ImageOf<PixelMono> &_oR)
+bool fgtThread::processImages(ImageOf<PixelRgb> &_oL, ImageOf<PixelRgb> &_oR)
 {
-    // _oR = *imageInR;
-    // _oL = *imageInL;
-    // 
-    _oL.resize(*imageInL);
     _oR.resize(*imageInR);
+    _oL.resize(*imageInL);
+    // 
+    ImageOf<PixelMono> maskL;
+    ImageOf<PixelMono> maskR;
+    maskL.resize(*imageInL);
+    maskR.resize(*imageInR);
 
-    cv::Mat imgL((IplImage*)imageInL->getIplImage());
-    cv::Mat imgR((IplImage*)imageInR->getIplImage());
-    cv::Mat outL((IplImage*)_oL.getIplImage());
-    cv::Mat outR((IplImage*)_oR.getIplImage());
+    ImageOf<PixelRgb> imageOL=*imageInL;
+    ImageOf<PixelRgb> imageOR=*imageInR;
+
+    cv::Mat imgL((IplImage*)imageOL.getIplImage());
+    cv::Mat imgR((IplImage*)imageOR.getIplImage());
+    cv::Mat mskL((IplImage*)maskL.getIplImage());
+    cv::Mat mskR((IplImage*)maskR.getIplImage());
     cv::Mat imgLHSV;
     cv::Mat imgRHSV;
 
-    yTrace("I'm converting the images to their HSV scale");
+    yTrace("I'm converting the images to in HSV");
     cvtColor(imgL,imgLHSV,CV_RGB2HSV);
     cvtColor(imgR,imgRHSV,CV_BGR2HSV);
 
+    yTrace("I'm filtering according to the HSV");
+    cv::inRange(imgLHSV, cv::Scalar(40,50,50), cv::Scalar(60,255,255),mskL);
+    cv::inRange(imgRHSV, cv::Scalar(40,50,50), cv::Scalar(80,255,255),mskR);
+
     yTrace("I'm blurring them in order to remove noise.");
-    medianBlur(imgLHSV, imgLHSV, 3);
-    medianBlur(imgRHSV, imgRHSV, 3);
+    medianBlur(mskL, mskL, 5);
+    medianBlur(mskR, mskR, 5);
 
-    yDebug("I'm filtering according to the HSV");
-    cv::inRange(imgLHSV, cv::Scalar(40,50,50), cv::Scalar(60,255,255),outL);
-    cv::inRange(imgRHSV, cv::Scalar(40,50,50), cv::Scalar(60,255,255),outR);
+    // The mask could have more than one blob: find the biggest one
+    // (hopefully the fingertip)
+    yDebug("Let's find the biggest contour");
+    vector<vector<cv::Point> > contours;
+    double area = -1;
+    cv::RotatedRect rect;
 
-    // //remove some further noise
-    // cv::Mat element = cv::getStructuringElement(CV_SHAPE_RECT,cvSize(2,2),cvPoint(1,1));  
-    // cv::morphologyEx(outL, outL, 2, element, cvPoint(-1,-1), 4);
+    contours.clear();
+    cv::findContours(mskL,contours,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_SIMPLE);
+    int idx=-1;
+    int largestArea=0;
+
+    if (contours.size()>0)
+    {
+        for (size_t i=0; i<contours.size(); i++)
+        {
+            area=cv::contourArea(contours[i]);
+            if (area>largestArea)
+            {
+                largestArea=area;
+                idx=i;
+            }
+        }
+
+        if (largestArea>12)
+        {
+            // 5d: Find the center of mass of the biggest contour
+            rect=cv::fitEllipse(contours[idx]);
+            cv::Point fgtL=rect.center;
+            cv::ellipse(imgL, rect, cv::Scalar(40,50,50), 2);
+            cv::circle(imgL, fgtL, 3, cv::Scalar(175,125,0), -1);
+        }
+    }
+
+    area = -1;
+    contours.clear();
+    cv::findContours(mskR,contours,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_SIMPLE);
+    idx=-1;
+    largestArea=0;
+
+    if (contours.size()>0)
+    {
+        for (size_t i=0; i<contours.size(); i++)
+        {
+            area=cv::contourArea(contours[i]);
+            if (area>largestArea)
+            {
+                largestArea=area;
+                idx=i;
+            }
+        }
+
+        if (largestArea>12)
+        {
+            // 5d: Find the center of mass of the biggest contour
+            rect=cv::fitEllipse(contours[idx]);
+            cv::Point fgtR=rect.center;
+            cv::ellipse(imgR, rect, cv::Scalar(40,50,50), 2);
+            cv::circle(imgR, fgtR, 3, cv::Scalar(175,125,0), -1);
+        }
+    }
+
+    _oL = imageOL;
+    _oR = imageOR;
 
     return true;
 }

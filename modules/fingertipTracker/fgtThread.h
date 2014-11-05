@@ -66,12 +66,12 @@ protected:
 
     BufferedPort<ImageOf<PixelRgb> > imagePortInR;   // port for reading images
     BufferedPort<ImageOf<PixelRgb> > imagePortInL;   // port for reading images
-    BufferedPort<ImageOf<PixelMono> > imagePortOutR;  // port for streaming images
-    BufferedPort<ImageOf<PixelMono> > imagePortOutL;  // port for streaming images
+    BufferedPort<ImageOf<PixelRgb> > imagePortOutR;  // port for streaming images
+    BufferedPort<ImageOf<PixelRgb> > imagePortOutL;  // port for streaming images
     ImageOf<PixelRgb> *imageInR;
     ImageOf<PixelRgb> *imageInL;
-    ImageOf<PixelMono> imageOutR;
-    ImageOf<PixelMono> imageOutL;
+    ImageOf<PixelRgb> imageOutR;
+    ImageOf<PixelRgb> imageOutL;
 
     BufferedPort<Bottle>  doubleTouchPort;           // input from the doubleTouch
     Bottle               *doubleTouchBottle;
@@ -80,7 +80,7 @@ protected:
     BufferedPort<Bottle>  outPort;                   // output the doubleTouch
 
 
-    bool processImages(ImageOf<PixelMono> &_oL, ImageOf<PixelMono> &_oR);
+    bool processImages(ImageOf<PixelRgb> &_oL, ImageOf<PixelRgb> &_oR);
     bool sendImages();
     bool sendFinger();
 
