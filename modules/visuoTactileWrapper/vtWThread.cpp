@@ -18,6 +18,9 @@ vtWThread::vtWThread(int _rate, const string &_name, const string &_robot, int _
 
     doubleTouchPos.resize(3,0.0);
     doubleTouchVelEstimate.resize(3,0.0);
+
+    fgtTrackerPos.resize(3,0.0);
+    fgtTrackerVelEstimate.resize(3,0.0);
     
     armR = new iCubArm("right");
     armL = new iCubArm("left");
@@ -30,12 +33,14 @@ bool vtWThread::threadInit()
     optFlowPort.open(("/"+name+"/optFlow:i").c_str());
     pf3dTrackerPort.open(("/"+name+"/pf3dTracker:i").c_str());
     doubleTouchPort.open(("/"+name+"/doubleTouch:i").c_str());
+    fgtTrackerPort.open(("/"+name+"/fingertipTracker:i").c_str());
     eventsPort.open(("/"+name+"/events:o").c_str());
     depth2kinPort.open(("/"+name+"/depth2kin:o").c_str());
     
     Network::connect("/ultimateTracker/Manager/events:o",("/"+name+"/optFlow:i").c_str());
     Network::connect("/pf3dTracker/data:o",("/"+name+"/pf3dTracker:i").c_str());
     Network::connect("/doubleTouch/status:o",("/"+name+"/doubleTouch:i").c_str());
+    Network::connect("/fingertipTracker/out:o",("/"+name+"/fingertipTracker:i").c_str());
     Network::connect(("/"+name+"/events:o").c_str(),"/visuoTactileRF/events:i");
 
     Property OptGaze;
@@ -105,9 +110,10 @@ bool vtWThread::threadInit()
         iencsL->getAxes(&jntsL);
         encsL = new yarp::sig::Vector(jntsL,0.0);
 
-    linEst_optFlow   = new AWLinEstimator(16,0.05);
+    linEst_optFlow     = new AWLinEstimator(16,0.05);
     linEst_pf3dTracker = new AWLinEstimator(16,0.05);
     linEst_doubleTouch = new AWLinEstimator(16,0.05);
+    linEst_fgtTracker  = new AWLinEstimator(16,0.05);
     
     return true;
 }
@@ -228,6 +234,37 @@ void vtWThread::run()
             }
         }
     }
+
+    // process the fingertipTracker
+    if(fgtTrackerBottle = fgtTrackerPort.read(false))
+    {
+        if (doubleTouchBottle = doubleTouchPort.read(false))
+        {           
+            if(fgtTrackerBottle != NULL && doubleTouchBottle != NULL)
+            {
+                if (doubleTouchBottle->get(3).asString() != "" && fgtTrackerBottle->get(0).asInt() != 0)
+                {
+                    doubleTouchStep = doubleTouchBottle->get(0).asInt();
+                    fgtTrackerPos[0] = fgtTrackerBottle->get(1).asDouble();
+                    fgtTrackerPos[1] = fgtTrackerBottle->get(2).asDouble();
+                    fgtTrackerPos[2] = fgtTrackerBottle->get(3).asDouble();
+                    AWPolyElement el2(fgtTrackerPos,Time::now());
+                    fgtTrackerVelEstimate=linEst_fgtTracker->estimate(el2);
+
+                    if(doubleTouchStep<=1)
+                    {
+                        Vector ang(3,0.0);
+                        igaze -> lookAtAbsAngles(ang);
+                    }
+                    else if(doubleTouchStep>1 && doubleTouchStep<7)
+                    {
+                        events.push_back(IncomingEvent(fgtTrackerPos,fgtTrackerVelEstimate,-1.0,"fingertipTracker"));
+                        isTarget=true;
+                    }
+                }
+            }
+        }
+    }
     
     if (isTarget)
     {
@@ -273,6 +310,19 @@ void vtWThread::threadRelease()
         igaze -> restoreContext(contextGaze);
         igaze -> stopControl();
         ddG.close();
+
+    printMessage(0,"Closing estimators..\n");
+        delete linEst_optFlow;
+        linEst_optFlow = NULL;
+        
+        delete linEst_pf3dTracker;
+        linEst_pf3dTracker = NULL;
+
+        delete linEst_doubleTouch;
+        linEst_doubleTouch = NULL;
+
+        delete linEst_fgtTracker;
+        linEst_fgtTracker = NULL;
 
     printMessage(0,"Closing ports..\n");
         optFlowPort.interrupt();

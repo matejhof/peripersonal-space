@@ -99,7 +99,7 @@ protected:
 
     bool processImages(ImageOf<PixelRgb> &_oL, ImageOf<PixelRgb> &_oR);
     bool sendImages();
-    bool sendFinger();
+    bool get3DPoint();
 
     /**
     * Prints a message according to the verbosity level:

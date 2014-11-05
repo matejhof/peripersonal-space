@@ -92,15 +92,17 @@ void fgtThread::run()
                         {
                             yTrace("Processing images..");
 
+                            bool fgt = 0;
                             if (processImages(imageOutL,imageOutR))
                             {
-                                sendFinger();    
+                                get3DPoint();    
                             }
                             else
                             {
                                 yTrace("finger not found. fingerL: %s fingerR: %s",
                                         fingerL.toString(3,3).c_str(),fingerR.toString(3,3).c_str());
                             }
+                            
                             
                             sendImages();
                         }
@@ -230,13 +232,13 @@ bool fgtThread::sendImages()
     return true;
 }
 
-bool fgtThread::sendFinger()
+bool fgtThread::get3DPoint()
 {
     yarp::sig::Vector x(3,0.0);
 
     igaze->triangulate3DPoint(fingerL, fingerR, x);
 
-    yTrace("3D point found! %s fingerL: %s fingerR: %s",x.toString(3,3).c_str(),
+    yDebug("3D point found! %s fingerL: %s fingerR: %s",x.toString(3,3).c_str(),
             fingerL.toString(3,3).c_str(),fingerR.toString(3,3).c_str());
 
 

@@ -103,10 +103,16 @@ protected:
         Vector                doubleTouchPos;
         Vector                doubleTouchVelEstimate;
 
+        BufferedPort<Bottle>  fgtTrackerPort;           
+        Bottle               *fgtTrackerBottle;
+        Vector                fgtTrackerPos;
+        Vector                fgtTrackerVelEstimate;
+
     // Velocity Estimators (using adaptive window linear fitting)
         AWLinEstimator       *linEst_optFlow;
         AWLinEstimator       *linEst_pf3dTracker;
         AWLinEstimator       *linEst_doubleTouch;
+        AWLinEstimator       *linEst_fgtTracker;
 
     // Drivers and Interfaces
         // Right arm
