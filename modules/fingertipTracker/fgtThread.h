@@ -31,6 +31,10 @@
 #include <yarp/sig/Matrix.h>
 #include <yarp/sig/Image.h>
 
+#include <yarp/dev/PolyDriver.h>
+#include <yarp/dev/GazeControl.h>
+#include <yarp/dev/Drivers.h>
+
 #include <yarp/math/Math.h>
 
 #include <iostream>
@@ -43,6 +47,7 @@
 
 using namespace yarp;
 using namespace yarp::sig;
+using namespace yarp::dev;
 using namespace yarp::math;
 
 using namespace std;
@@ -82,6 +87,10 @@ protected:
     Vector fingerL;
     Vector fingerR;
 
+    // Gaze Controller
+    PolyDriver       ddG; // gaze  controller  driver
+    IGazeControl    *igaze;
+    int contextGaze;
 
     bool processImages(ImageOf<PixelRgb> &_oL, ImageOf<PixelRgb> &_oR);
     bool sendImages();

@@ -37,6 +37,21 @@ bool fgtThread::threadInit()
         Network::connect(("/"+name+"/imageR:o").c_str(),"/yvR");
         Network::connect("/doubleTouch/status:o",("/"+name+"/doubleTouch:i").c_str());
 
+    Property OptGaze;
+    OptGaze.put("device","gazecontrollerclient");
+    OptGaze.put("remote","/iKinGazeCtrl");
+    OptGaze.put("local",("/"+name+"/gaze").c_str());
+
+    if ((!ddG.open(OptGaze)) || (!ddG.view(igaze))){
+       printMessage(0,"Error: could not open the Gaze Controller!\n");
+       return false;
+    }
+
+    igaze -> storeContext(&contextGaze);
+    igaze -> setSaccadesStatus(false);
+    igaze -> setNeckTrajTime(0.75);
+    igaze -> setEyesTrajTime(0.5);
+
     return true;
 }
 
@@ -77,11 +92,6 @@ void fgtThread::run()
     //         }
     //     }
     // }
-}
-
-bool fgtThread::sendFinger()
-{
-
 }
 
 bool fgtThread::processImages(ImageOf<PixelRgb> &_oL, ImageOf<PixelRgb> &_oR)
@@ -201,6 +211,17 @@ bool fgtThread::sendImages()
     return true;
 }
 
+bool fgtThread::sendFinger()
+{
+    Vector 3DPoint(3,0.0);
+
+    igaze->triangulate3DPoint(fingerL, fingerR, 3DPoint);
+
+    yDebug("3D point found! %s",3DPoint.toString().c_str());
+
+
+}
+
 int fgtThread::printMessage(const int l, const char *f, ...) const
 {
     if (verbosity>=l)
@@ -220,6 +241,12 @@ int fgtThread::printMessage(const int l, const char *f, ...) const
 
 void fgtThread::threadRelease()
 {
+    printMessage(0,"Closing gaze controller..\n");
+        Vector ang(3,0.0);
+        igaze -> lookAtAbsAngles(ang);
+        igaze -> restoreContext(contextGaze);
+        igaze -> stopControl();
+        ddG.close();
 }
 
 // empty line to make gcc happy

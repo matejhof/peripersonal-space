@@ -26,7 +26,7 @@
 #include <yarp/os/RateThread.h>
 #include <yarp/os/BufferedPort.h>
 #include <yarp/os/RFModule.h>
- #include <yarp/os/Log.h>
+#include <yarp/os/Log.h>
 
 #include <yarp/sig/Vector.h>
 #include <yarp/sig/Matrix.h>
