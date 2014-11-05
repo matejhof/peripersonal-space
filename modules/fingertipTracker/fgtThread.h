@@ -88,6 +88,7 @@ protected:
 
     Vector fingerL;
     Vector fingerR;
+    Vector fingertip;
 
     Vector HSVmin;
     Vector HSVmax;

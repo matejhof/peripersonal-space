@@ -16,7 +16,7 @@
 #define FOREARM_LEFT   2
 #define HAND_RIGHT     4
 #define FOREARM_RIGHT  5
-#define SKIN_THRES	  15 // Threshold with which a contact is detected
+#define SKIN_THRES	   7 // Threshold with which a contact is detected
 
 // enum SkinPart { 
 //     SKIN_PART_UNKNOWN=0, 
@@ -316,18 +316,18 @@ void vtRFThread::run()
         else
         {
             eventsBuffer.push_back(incomingEvents.back());
-            printMessage(4,"I'm bufferizing! Size %i\n",eventsBuffer.size());
+            printMessage(2,"I'm bufferizing! Size %i\n",eventsBuffer.size());
         }
 
-        // limit the size of the buffer to 30, i.e. 3 seconds of acquisition
-        if (eventsBuffer.size() >= 30)
+        // limit the size of the buffer to 60, i.e. 3 seconds of acquisition
+        if (eventsBuffer.size() >= 60)
         {
             eventsBuffer.erase(eventsBuffer.begin());
-            printMessage(1,"Too many samples: removing the older element from the buffer..\n");
+            printMessage(4,"Too many samples: removing the older element from the buffer..\n");
         }
 
         // detect contacts and train the taxels
-        if (skinContacts && eventsBuffer.size()>20)
+        if (skinContacts && eventsBuffer.size()>10)
         {
             std::vector<unsigned int> IDv; IDv.clear();
             int IDx = -1;
@@ -741,7 +741,7 @@ bool vtRFThread::trainTaxels(const std::vector<unsigned int> IDv, const int IDx)
         for (size_t k = 0; k < eventsBuffer.size(); k++)
         {
             IncomingEvent4Taxel projection = projectIntoTaxelRF(iCubSkin[IDx].taxel[j].RF,T_a,eventsBuffer[k]);
-            printMessage(3,"Training Taxels: skinPart %d ID %i k %i NORM %g TTC %g\n",IDx,iCubSkin[IDx].taxel[j].ID,k,projection.NRM,projection.TTC);
+            printMessage(4,"Training Taxels: skinPart %d ID %i k %i NORM %g TTC %g\n",IDx,iCubSkin[IDx].taxel[j].ID,k,projection.NRM,projection.TTC);
 
             if (itHasBeenTouched == true)
             {
@@ -755,11 +755,11 @@ bool vtRFThread::trainTaxels(const std::vector<unsigned int> IDv, const int IDx)
 
         if (itHasBeenTouched == true)
         {
-            dumpedVector.push_back(1.0); printf("asdfoija %s\n", dumpedVector.toString().c_str());
+            dumpedVector.push_back(1.0); printf("asdfoija %s\n", dumpedVector.toString(3,3).c_str());
         }
         else
         {
-            dumpedVector.push_back(-1.0); printf("asdfoija %s\n", dumpedVector.toString().c_str());
+            dumpedVector.push_back(-1.0); printf("asdfoija %s\n", dumpedVector.toString(3,3).c_str());
         }
     }
 
@@ -1174,12 +1174,12 @@ bool vtRFThread::setTaxelPosesFromFile(const string filePath, skinPart &sP)
         {
             // the taxels at the centers of respective triangles [note that i == taxelID == (line in the .txt file +1)]
             // e.g. first triangle of upper arm is at lines 1-12, center at line 4, thus i=2 
-            if((i==3) || (i==15)  || (i==27)  || (i==39)  || (i==51)  || (i==63)  || (i==75)  || (i==87)  || 
-              (i==99) || (i==111) || (i==123) || (i==135) || (i==147) || (i==159) || (i==171) || (i==183) || //upper patch ends here 
-              (i==207)|| (i==255) || (i==291) || (i==303) || (i==315) || (i==339) || (i==351)) //lower patch
+            // if((i==3) || (i==15)  || (i==27)  || (i==39)  || (i==51)  || (i==63)  || (i==75)  || (i==87)  || 
+            //   (i==99) || (i==111) || (i==123) || (i==135) || (i==147) || (i==159) || (i==171) || (i==183) ||
+            //   (i==207)|| (i==255) || (i==291) || (i==303) || (i==315) || (i==339) || (i==351))
 
             // if((i==3) || (i==39)  || (i==207)|| (i==255) || (i==291))
-            // if((i==3) || (i==15)  || (i==27)|| (i==183))
+            if((i==3) || (i==15)  || (i==27)|| (i==183))    // those are the taxels that are in the lower patch but closest to the upper patch (internally)
             // if((i==135) || (i==147)  || (i==159)|| (i==171))
             {
                 sP.size++;

@@ -9,6 +9,7 @@ fgtThread::fgtThread(int _rate, const string &_name, const string &_robot, int _
 
     fingerL.resize(2,0.0);
     fingerR.resize(2,0.0);
+    fingertip.resize(3,0.0);
 
     HSVmin.resize(3,0.0);
     HSVmax.resize(3,0.0);
@@ -43,6 +44,7 @@ bool fgtThread::threadInit()
         Network::connect(("/"+name+"/imageL:o").c_str(),"/yvL");
         Network::connect(("/"+name+"/imageR:o").c_str(),"/yvR");
         Network::connect("/doubleTouch/status:o",("/"+name+"/doubleTouch:i").c_str());
+        Network::connect(("/"+name+"/out:o").c_str(),"/visuoTactileWrapper/fingertipTracker:i");
 
     Property OptGaze;
     OptGaze.put("device","gazecontrollerclient");
@@ -93,7 +95,7 @@ void fgtThread::run()
                             yTrace("Processing images..");
 
                             bool fgt = 0;
-                            if (processImages(imageOutL,imageOutR))
+                            if (fgt=processImages(imageOutL,imageOutR))
                             {
                                 get3DPoint();    
                             }
@@ -102,7 +104,16 @@ void fgtThread::run()
                                 yTrace("finger not found. fingerL: %s fingerR: %s",
                                         fingerL.toString(3,3).c_str(),fingerR.toString(3,3).c_str());
                             }
-                            
+                        
+                            Bottle& output = outPort.prepare();
+                            output.clear();
+                            output.addInt(fgt);
+                            if (fgt)
+                            {
+                                vectorIntoBottle(fingertip,output);
+                            }
+
+                            outPort.write();
                             
                             sendImages();
                         }
@@ -201,8 +212,8 @@ bool fgtThread::processImages(ImageOf<PixelRgb> &_oL, ImageOf<PixelRgb> &_oR)
                 idx=i;
             }
         }
-
-        if (largestArea>16)
+        yTrace("largestArea: %i",largestArea);
+        if (largestArea>16 && largestArea<200)
         {
             rect=cv::fitEllipse(contours[idx]);
             cv::Point fgtR=rect.center;
@@ -241,7 +252,9 @@ bool fgtThread::get3DPoint()
     yDebug("3D point found! %s fingerL: %s fingerR: %s",x.toString(3,3).c_str(),
             fingerL.toString(3,3).c_str(),fingerR.toString(3,3).c_str());
 
+    fingertip = x;
 
+    return true;
 }
 
 void fgtThread::setHMax(int _val)

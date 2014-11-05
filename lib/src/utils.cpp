@@ -169,7 +169,7 @@ unsigned int factorial(unsigned int n)
     string IncomingEvent::toString(int precision) const
     {
         stringstream res;
-        res << "Pos: "<< Pos.toString() << "\t Vel: "<< Vel.toString()
+        res << "Pos: "<< Pos.toString(3,3) << "\t Vel: "<< Vel.toString(3,3)
             << "\t Radius: "<< Radius << "\t Src: "<< Src;
         return res.str();
     }

@@ -176,6 +176,37 @@ void vtWThread::run()
         }
     }
 
+    // process the fingertipTracker
+    if(fgtTrackerBottle = fgtTrackerPort.read(false))
+    {
+        if (doubleTouchBottle = doubleTouchPort.read(false))
+        {           
+            if(fgtTrackerBottle != NULL && doubleTouchBottle != NULL)
+            {
+                if (doubleTouchBottle->get(3).asString() != "" && fgtTrackerBottle->get(0).asInt() != 0)
+                {
+                    doubleTouchStep = doubleTouchBottle->get(0).asInt();
+                    fgtTrackerPos[0] = fgtTrackerBottle->get(1).asDouble();
+                    fgtTrackerPos[1] = fgtTrackerBottle->get(2).asDouble();
+                    fgtTrackerPos[2] = fgtTrackerBottle->get(3).asDouble();
+                    AWPolyElement el2(fgtTrackerPos,Time::now());
+                    fgtTrackerVelEstimate=linEst_fgtTracker->estimate(el2);
+
+                    if(doubleTouchStep<=1)
+                    {
+                        Vector ang(3,0.0);
+                        igaze -> lookAtAbsAngles(ang);
+                    }
+                    else if(doubleTouchStep>1 && doubleTouchStep<8)
+                    {
+                        events.clear();
+                        events.push_back(IncomingEvent(fgtTrackerPos,fgtTrackerVelEstimate,-1.0,"fingertipTracker"));
+                        isTarget=true;
+                    }
+                }
+            }
+        }
+    }
     // process the doubleTouch
     if(doubleTouchBottle = doubleTouchPort.read(false))
     {
@@ -197,7 +228,7 @@ void vtWThread::run()
                     Vector ang(3,0.0);
                     igaze -> lookAtAbsAngles(ang);
                 }
-                else if(doubleTouchStep>1 && doubleTouchStep<7)
+                else if(doubleTouchStep>1 && doubleTouchStep<8)
                 {
                     if(currentTask=="LtoR" || currentTask=="LHtoR") //right to left -> the right index finger will be generating events
                     { 
@@ -228,53 +259,22 @@ void vtWThread::run()
                                    
                     AWPolyElement el2(doubleTouchPos,Time::now());
                     doubleTouchVelEstimate=linEst_doubleTouch->estimate(el2);
-                    events.push_back(IncomingEvent(doubleTouchPos,doubleTouchVelEstimate,-1.0,"doubleTouch"));
-                    isTarget=true;
-                }
-            }
-        }
-    }
-
-    // process the fingertipTracker
-    if(fgtTrackerBottle = fgtTrackerPort.read(false))
-    {
-        if (doubleTouchBottle = doubleTouchPort.read(false))
-        {           
-            if(fgtTrackerBottle != NULL && doubleTouchBottle != NULL)
-            {
-                if (doubleTouchBottle->get(3).asString() != "" && fgtTrackerBottle->get(0).asInt() != 0)
-                {
-                    doubleTouchStep = doubleTouchBottle->get(0).asInt();
-                    fgtTrackerPos[0] = fgtTrackerBottle->get(1).asDouble();
-                    fgtTrackerPos[1] = fgtTrackerBottle->get(2).asDouble();
-                    fgtTrackerPos[2] = fgtTrackerBottle->get(3).asDouble();
-                    AWPolyElement el2(fgtTrackerPos,Time::now());
-                    fgtTrackerVelEstimate=linEst_fgtTracker->estimate(el2);
-
-                    if(doubleTouchStep<=1)
-                    {
-                        Vector ang(3,0.0);
-                        igaze -> lookAtAbsAngles(ang);
-                    }
-                    else if(doubleTouchStep>1 && doubleTouchStep<7)
-                    {
-                        events.push_back(IncomingEvent(fgtTrackerPos,fgtTrackerVelEstimate,-1.0,"fingertipTracker"));
-                        isTarget=true;
-                    }
+                    // events.push_back(IncomingEvent(doubleTouchPos,doubleTouchVelEstimate,-1.0,"doubleTouch"));
+                    // isTarget=true;
                 }
             }
         }
     }
     
+    if (pf3dTrackerPos[0]!=0.0 && pf3dTrackerPos[1]!=0.0 && pf3dTrackerPos[2]!=0.0)
+        igaze -> lookAtFixationPoint(pf3dTrackerPos);
+    else if (doubleTouchPos[0]!=0.0 && doubleTouchPos[1]!=0.0 && doubleTouchPos[2]!=0.0)
+        igaze -> lookAtFixationPoint(doubleTouchPos);
+    else if (optFlowPos[0]!=0.0 && optFlowPos[1]!=0.0 && optFlowPos[2]!=0.0)
+        igaze -> lookAtFixationPoint(optFlowPos);
+    
     if (isTarget)
-    {
-        if (pf3dTrackerPos[0]!=0.0 && pf3dTrackerPos[1]!=0.0 && pf3dTrackerPos[2]!=0.0)
-            igaze -> lookAtFixationPoint(pf3dTrackerPos);
-        else if (doubleTouchPos[0]!=0.0 && doubleTouchPos[1]!=0.0 && doubleTouchPos[2]!=0.0)
-            igaze -> lookAtFixationPoint(doubleTouchPos);
-        else if (optFlowPos[0]!=0.0 && optFlowPos[1]!=0.0 && optFlowPos[2]!=0.0)
-            igaze -> lookAtFixationPoint(optFlowPos);
-        
+    {        
         Bottle& eventsBottle = eventsPort.prepare();
         eventsBottle.clear();
         for (size_t i = 0; i < events.size(); i++)
@@ -283,6 +283,13 @@ void vtWThread::run()
         }
         eventsPort.write();
     }
+    // else
+    // {
+    //     linEst_optFlow     -> reset();
+    //     linEst_pf3dTracker -> reset();
+    //     linEst_doubleTouch -> reset();
+    //     linEst_fgtTracker  -> reset();
+    // }
 }
 
 int vtWThread::printMessage(const int l, const char *f, ...) const

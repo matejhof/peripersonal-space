@@ -186,7 +186,7 @@ public:
         robot = "icub";
 
         verbosity  = 0;      // verbosity
-        rate       = 100;    // rate of the vtRFThread
+        rate       = 50;    // rate of the vtRFThread
 
         //******************************************************
         //********************** CONFIGS ***********************

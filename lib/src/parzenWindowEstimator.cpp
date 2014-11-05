@@ -265,12 +265,12 @@ double gauss2D(const double x_0, const double y_0,
         
     bool parzenWindowEstimator2D::getIndexes(const std::vector<double> x, int &b0, int &b1)
     {
-        printf("x\t%g\t%g\t",x[0],x[1]);
+        // printf("x\t%g\t%g\t",x[0],x[1]);
         if (x[0] >= extX[0] && x[0] <= extX[1] && x[1] >= extY[0] && x[1] <= extY[1])
         {
             b0 = int((x[0]-firstPosBinShift[0])/binWidth[0]+firstPosBin[0]);
             b1 = int((x[1]-firstPosBinShift[1])/binWidth[1]+firstPosBin[1]);
-            printf("b0\t%i\tb1\t%i\t\n", b0, b1);
+            // printf("b0\t%i\tb1\t%i\t\n", b0, b1);
 
             return true;
         }
