@@ -1179,8 +1179,9 @@ bool vtRFThread::setTaxelPosesFromFile(const string filePath, skinPart &sP)
             //   (i==207)|| (i==255) || (i==291) || (i==303) || (i==315) || (i==339) || (i==351))
 
             // if((i==3) || (i==39)  || (i==207)|| (i==255) || (i==291))
-            if((i==3) || (i==15)  || (i==27)|| (i==183))    // those are the taxels that are in the lower patch but closest to the upper patch (internally)
+            // if((i==3) || (i==15)  || (i==27)|| (i==183))    // those are the taxels that are in the big patch but closest to the little patch (internally)
             // if((i==135) || (i==147)  || (i==159)|| (i==171))
+            if((i==87) || (i==75)  || (i==39)|| (i==51)) // those are the taxels that are in the big patch but closest to the little patch (externally)
             {
                 sP.size++;
                 sP.taxel.push_back(Taxel(taxelPos,taxelNorm,i));
