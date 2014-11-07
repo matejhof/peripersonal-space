@@ -159,6 +159,8 @@ public:
 */
 int main(int argc, char * argv[])
 {
+    Network yarp;
+
     YARP_REGISTER_DEVICES(icubmod)
 
     ResourceFinder rf;
@@ -179,8 +181,7 @@ int main(int argc, char * argv[])
         cout << endl;
         return 0;
     }
-
-    Network yarp;
+    
     if (!yarp.checkNetwork())
     {
         printf("No Network!!!\n");

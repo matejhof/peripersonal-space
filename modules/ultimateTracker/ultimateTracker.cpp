@@ -281,6 +281,8 @@ public:
 */
 int main(int argc, char * argv[])
 {
+    Network yarp;
+
     ResourceFinder moduleRF;
     moduleRF.setVerbose(false);
     moduleRF.setDefaultContext("periPersonalSpace");
@@ -303,7 +305,6 @@ int main(int argc, char * argv[])
         return 0;
     }
 
-    Network yarp;
     if (!yarp.checkNetwork())
     {
         printf("No Network!!!\n");

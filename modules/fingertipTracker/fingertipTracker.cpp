@@ -245,6 +245,8 @@ public:
 */
 int main(int argc, char * argv[])
 {
+    Network yarp;
+
     YARP_REGISTER_DEVICES(icubmod)
 
     ResourceFinder moduleRF;
@@ -267,8 +269,7 @@ int main(int argc, char * argv[])
         yInfo("");
         return 0;
     }
-
-    Network yarp;
+    
     if (!yarp.checkNetwork())
     {
         yError("No Network!!!");

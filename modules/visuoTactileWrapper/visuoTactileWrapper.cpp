@@ -222,6 +222,8 @@ public:
 */
 int main(int argc, char * argv[])
 {
+    Network yarp;
+
 /*    parzenWindowEstimator pwe(0.2,10);
     for (int i = 0; i < 10; i++)
     {
@@ -263,8 +265,7 @@ int main(int argc, char * argv[])
         cout << endl;
         return 0;
     }
-
-    Network yarp;
+    
     if (!yarp.checkNetwork())
     {
         printf("No Network!!!\n");
