@@ -195,7 +195,7 @@ bool utManagerThread::stabilityCheck()
 {
     oldMcutPoss.push_back(motionCUTPos);    
 
-    if (oldMcutPoss.size()>20)
+    if (oldMcutPoss.size()>12)
     {
         // keep the buffer size constant
         oldMcutPoss.erase(oldMcutPoss.begin());
@@ -216,7 +216,7 @@ bool utManagerThread::stabilityCheck()
         stdev(1)=sqrt(stdev(1));
 
         // if samples are mostly lying around the mean
-        if ((2.0*stdev(0)<6.0) && (2.0*stdev(1)<6.0))
+        if ((2.0*stdev(0)<8.0) && (2.0*stdev(1)<8.0))
             return true; 
     }
 
