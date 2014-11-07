@@ -134,7 +134,7 @@ void vtWThread::run()
             optFlowPos[1]=optFlowBottle->get(1).asDouble();
             optFlowPos[2]=optFlowBottle->get(2).asDouble();
 
-            events.push_back(IncomingEvent(optFlowPos,optFlowVelEstimate,-1.0,"pf3dTracker"));
+            events.push_back(IncomingEvent(optFlowPos,optFlowVelEstimate,0.05,"optFlow"));
             isTarget=true;
         }
     }
@@ -259,8 +259,8 @@ void vtWThread::run()
                                    
                     AWPolyElement el2(doubleTouchPos,Time::now());
                     doubleTouchVelEstimate=linEst_doubleTouch->estimate(el2);
-                    // events.push_back(IncomingEvent(doubleTouchPos,doubleTouchVelEstimate,-1.0,"doubleTouch"));
-                    // isTarget=true;
+                    events.push_back(IncomingEvent(doubleTouchPos,doubleTouchVelEstimate,-1.0,"doubleTouch"));
+                    isTarget=true;
                 }
             }
         }
