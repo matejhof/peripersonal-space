@@ -114,6 +114,8 @@ bool vtWThread::threadInit()
     linEst_pf3dTracker = new AWLinEstimator(16,0.05);
     linEst_doubleTouch = new AWLinEstimator(16,0.05);
     linEst_fgtTracker  = new AWLinEstimator(16,0.05);
+
+    timeNow = yarp::os::Time::now();
     
     return true;
 }
@@ -207,6 +209,7 @@ void vtWThread::run()
             }
         }
     }
+
     // process the doubleTouch
     if(doubleTouchBottle = doubleTouchPort.read(false))
     {
@@ -283,13 +286,16 @@ void vtWThread::run()
         }
         eventsPort.write();
     }
-    // else
-    // {
-    //     linEst_optFlow     -> reset();
-    //     linEst_pf3dTracker -> reset();
-    //     linEst_doubleTouch -> reset();
-    //     linEst_fgtTracker  -> reset();
-    // }
+    else if (yarp::os::Time::now() - timeNow > 2.0)
+    {
+        yInfo("No significant event in the last 2 seconds. Resetting the velocity estimators..");
+        timeNow = yarp::os::Time::now();
+
+        linEst_optFlow     -> reset();
+        linEst_pf3dTracker -> reset();
+        linEst_doubleTouch -> reset();
+        linEst_fgtTracker  -> reset();
+    }
 }
 
 int vtWThread::printMessage(const int l, const char *f, ...) const
