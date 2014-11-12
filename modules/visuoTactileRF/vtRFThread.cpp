@@ -371,7 +371,7 @@ void vtRFThread::run()
         eventsFlag = true;
         eventsBuffer.clear();
         timeNow = yarp::os::Time::now();
-        printMessage(2,"No significant event in the last 2 seconds. Erasing the buffer.. \n");
+        yInfo("No significant event in the last 2 seconds. Erasing the buffer..");
         dumpedVector.push_back(2.0);
     }
     else
