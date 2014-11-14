@@ -1180,8 +1180,11 @@ bool vtRFThread::setTaxelPosesFromFile(const string filePath, skinPart &sP)
 
             // if((i==3) || (i==39)  || (i==207)|| (i==255) || (i==291))
             // if((i==3) || (i==15)  || (i==27)|| (i==183))    // those are the taxels that are in the big patch but closest to the little patch (internally)
-            // if((i==135) || (i==147)  || (i==159)|| (i==171))
+            // 27 is proximal, 15 next, 3 next, 183 most distal
+            // if((i==135) || (i==147)  || (i==159)|| (i==171))  //this is the second column, farther away from the stitch
+            //  159 is most proximal, 147 is next, 135 next,  171 most distal
             if((i==87) || (i==75)  || (i==39)|| (i==51)) // those are the taxels that are in the big patch but closest to the little patch (externally)
+            // 87 most proximal, 75 then, 39 then, 51 distal
             {
                 sP.size++;
                 sP.taxel.push_back(Taxel(taxelPos,taxelNorm,i));
