@@ -185,7 +185,7 @@ public:
         name  = "visuoTactileRF";
         robot = "icub";
 
-        verbosity  = 0;      // verbosity
+        verbosity  = 0;     // verbosity
         rate       = 50;    // rate of the vtRFThread
 
         //******************************************************

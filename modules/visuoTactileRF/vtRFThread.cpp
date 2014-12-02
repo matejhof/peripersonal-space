@@ -319,19 +319,19 @@ void vtRFThread::run()
         if (eventsFlag)
         {
             eventsFlag  = false;
-            printMessage(0,"Starting the buffer..\n");
+            yInfo("Starting the buffer..");
         }
         else
         {
             eventsBuffer.push_back(incomingEvents.back());
-            printMessage(2,"I'm bufferizing! Size %i\n",eventsBuffer.size());
+            yDebug("I'm bufferizing! Size %i",eventsBuffer.size());
         }
 
         // limit the size of the buffer to 60, i.e. 3 seconds of acquisition
         if (eventsBuffer.size() >= 60)
         {
             eventsBuffer.erase(eventsBuffer.begin());
-            printMessage(4,"Too many samples: removing the older element from the buffer..\n");
+            yTrace("Too many samples: removing the older element from the buffer..");
         }
 
         // detect contacts and train the taxels
@@ -341,7 +341,7 @@ void vtRFThread::run()
             int IDx = -1;
             if (detectContact(skinContacts, IDx, IDv))
             {
-                printMessage(0,"Contact! Training the taxels..\n");
+                yInfo("Contact! Training the taxels..");
                 timeNow     = yarp::os::Time::now();
                 if (learningFlag == true )
                 {
@@ -349,7 +349,7 @@ void vtRFThread::run()
                 }
                 else
                 {
-                    printMessage(0,"No Learning has been put in place.\n");
+                    yWarning("No Learning has been put in place.");
                     for (size_t j = 0; j < iCubSkin[0].taxel.size(); j++)
                     {
                         dumpedVector.push_back(0.0);
@@ -510,7 +510,7 @@ void vtRFThread::sendContactsToSkinGui()
 
                     if (l.empty())
                     {
-                        printMessage(0,"WARNING: skinPart %d Taxel %d : no list of represented taxels is available,	even if Repr2TaxelList is not empty\n",i,iCubSkin[i].taxel[j].ID);
+                        yWarning("skinPart %d Taxel %d : no list of represented taxels is available, even if Repr2TaxelList is not empty",i,iCubSkin[i].taxel[j].ID);
                         respToSkin[iCubSkin[i].taxel[j].ID] = iCubSkin[i].taxel[j].Resp*100/255;
                     }
                     else
@@ -816,8 +816,8 @@ bool vtRFThread::projectIncomingEvent()
 
             // if (j==100)
             // {
-                printMessage(5,"Projection -> i: %i\tID %i\tEvent: ",i,j);
-                if (verbosity>=5)
+                printMessage(4,"Projection -> i: %i\tID %i\tEvent: ",i,j);
+                if (verbosity>=4)
                     iCubSkin[i].taxel[j].Evnt.print();
             // }
         }
@@ -846,29 +846,17 @@ IncomingEvent4Taxel vtRFThread::projectIntoTaxelRF(const Matrix &RF,const Matrix
     return Event_projected;
 }
 
-// Vector vtRFThread::projectIntoTaxelRF(const Matrix &RF,const Matrix &T_a,const Vector &wrfpos)
-// {
-//     Matrix T_a_proj = T_a * RF;
-
-//     Vector p=wrfpos;
-//     p.push_back(1);
-//     p = SE3inv(T_a_proj)*p;
-//     p.pop_back();
-
-//     return p;
-// }
-
 bool vtRFThread::computeX(IncomingEvent4Taxel &ie)
 {
     int sgn = ie.Pos[2]>=0?1:-1;
     ie.NRM = sgn * norm(ie.Pos);
     // printf("ie.Vel %g\n", norm(ie.Vel));
 
-    if (norm(ie.Vel) < 0.38 && norm(ie.Vel) > 0.34)
-    {
-        ie.TTC = 10000.0;
-    }
-    else
+    // if (norm(ie.Vel) < 0.38 && norm(ie.Vel) > 0.34)
+    // {
+    //     ie.TTC = 10000.0;
+    // }
+    // else
     {
         ie.TTC = -norm(ie.Pos)*norm(ie.Pos)/dot(ie.Pos,ie.Vel);
     }
@@ -932,7 +920,6 @@ bool vtRFThread::pushExtrinsics(const Matrix &M, string eye)
 void vtRFThread::drawTaxels(string _eye)
 {
     projectIntoImagePlane(iCubSkin,_eye);
-    // projectIntoImagePlane(       H,_eye);
 
     ImageOf<PixelRgb> imgOut;
 
@@ -946,7 +933,7 @@ void vtRFThread::drawTaxels(string _eye)
     }
     else
     {
-        printMessage(0,"ERROR in drawTaxels! Returning..\n");
+        yError("Error in drawTaxels! Returning..");
         return;
     }
 
@@ -958,11 +945,6 @@ void vtRFThread::drawTaxels(string _eye)
             printMessage(6,"iCubSkin[%i].taxel[%i].px %s\n",i,j,iCubSkin[i].taxel[j].px.toString().c_str());
         }
     }
-
-    // for (size_t i = 0; i < H.size(); i++)
-    // {
-    //     drawTaxel(imgOut,H[i].taxel[0].px,H[i].name,H[i].taxel[0].Resp);
-    // }
 
     _eye=="rightEye"?imagePortOutR.write(imgOut):imagePortOutL.write(imgOut);
 }
@@ -1027,7 +1009,7 @@ bool vtRFThread::projectIntoImagePlane(vector <skinPart> &sP, const string &eye)
             if (eye=="rightEye" || eye=="leftEye")
                 projectPoint(sP[i].taxel[j].WRFPos,sP[i].taxel[j].px,eye);
             else
-                printMessage(0,"ERROR in projectIntoImagePlane!\n");
+                yError("ERROR in projectIntoImagePlane!\n");
         }
     }
 
@@ -1220,7 +1202,8 @@ bool vtRFThread::setTaxelPosesFromFile(const string filePath, skinPart &sP)
         }
         else if (sP.name == "right_hand")
         { //right hand has different taxel nr.s than left hand 
-            if((i==101) || (i==103) || (i==118) || (i==137)) // || (i==124)) remove one taxel
+            // if((i==101) || (i==103) || (i==118) || (i==137)) // || (i==124)) remove one taxel
+            if((i==101) || (i==103) || (i==118) || (i==137) || (i==124))
             {
                 sP.size++;
                 sP.taxel.push_back(Taxel(taxelPos,taxelNorm,i));

@@ -84,31 +84,31 @@ bool vtWThread::threadInit()
         iencsR->getAxes(&jntsR);
         encsR = new yarp::sig::Vector(jntsR,0.0);
 
-    /**************************/
-        Property OptL;
-        OptL.put("robot",  robot.c_str());
-        OptL.put("part",   "left_arm");
-        OptL.put("device", "remote_controlboard");
-        OptL.put("remote",("/"+robot+"/left_arm").c_str());
-        OptL.put("local", ("/"+name +"/left_arm").c_str());
+    // /**************************/
+    //     Property OptL;
+    //     OptL.put("robot",  robot.c_str());
+    //     OptL.put("part",   "left_arm");
+    //     OptL.put("device", "remote_controlboard");
+    //     OptL.put("remote",("/"+robot+"/left_arm").c_str());
+    //     OptL.put("local", ("/"+name +"/left_arm").c_str());
 
-        if (!ddL.open(OptL))
-        {
-            yError(" could not open left_arm PolyDriver!");
-            return false;
-        }
-        ok = 1;
-        if (ddL.isValid())
-        {
-            ok = ok && ddL.view(iencsL);
-        }
-        if (!ok)
-        {
-            yError(" Problems acquiring left_arm interfaces!!!!");
-            return false;
-        }
-        iencsL->getAxes(&jntsL);
-        encsL = new yarp::sig::Vector(jntsL,0.0);
+    //     if (!ddL.open(OptL))
+    //     {
+    //         yError(" could not open left_arm PolyDriver!");
+    //         return false;
+    //     }
+    //     ok = 1;
+    //     if (ddL.isValid())
+    //     {
+    //         ok = ok && ddL.view(iencsL);
+    //     }
+    //     if (!ok)
+    //     {
+    //         yError(" Problems acquiring left_arm interfaces!!!!");
+    //         return false;
+    //     }
+    //     iencsL->getAxes(&jntsL);
+    //     encsL = new yarp::sig::Vector(jntsL,0.0);
 
     linEst_optFlow     = new AWLinEstimator(16,0.05);
     linEst_pf3dTracker = new AWLinEstimator(16,0.05);
@@ -139,7 +139,7 @@ void vtWThread::run()
             AWPolyElement el(optFlowPos,Time::now());
             optFlowVelEstimate=linEst_optFlow->estimate(el);
 
-            events.push_back(IncomingEvent(optFlowPos,optFlowVelEstimate,0.05,"optFlow"));
+            events.push_back(IncomingEvent(optFlowPos,optFlowVelEstimate,0.03,"optFlow"));
             isTarget=true;
         }
     }
