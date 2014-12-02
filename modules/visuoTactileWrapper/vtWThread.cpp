@@ -136,6 +136,9 @@ void vtWThread::run()
             optFlowPos[1]=optFlowBottle->get(1).asDouble();
             optFlowPos[2]=optFlowBottle->get(2).asDouble();
 
+            AWPolyElement el(optFlowPos,Time::now());
+            optFlowVelEstimate=linEst_optFlow->estimate(el);
+
             events.push_back(IncomingEvent(optFlowPos,optFlowVelEstimate,0.05,"optFlow"));
             isTarget=true;
         }
