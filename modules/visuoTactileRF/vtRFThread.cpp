@@ -108,57 +108,102 @@ bool vtRFThread::threadInit()
            
         Network::connect("/skinManager/skin_events:o",("/"+name+"/skin_events:i").c_str());
 
-    /**************************/
-        Property OptR;
-        OptR.put("robot",  robot.c_str());
-        OptR.put("part",   "right_arm");
-        OptR.put("device", "remote_controlboard");
-        OptR.put("remote",("/"+robot+"/right_arm").c_str());
-        OptR.put("local", ("/"+name +"/right_arm").c_str());
-
-        if (!ddR.open(OptR))
-        {
-            printMessage(0,"ERROR: could not open right_arm PolyDriver!\n");
-            return false;
-        }
-        bool ok = 1;
-        if (ddR.isValid())
-        {
-            ok = ok && ddR.view(iencsR);
-        }
-        if (!ok)
-        {
-            printMessage(0,"\nERROR: Problems acquiring right_arm interfaces!!!!\n");
-            return false;
-        }
-        iencsR->getAxes(&jntsR);
-        encsR = new yarp::sig::Vector(jntsR,0.0);
 
     /**************************/
-        Property OptL;
-        OptL.put("robot",  robot.c_str());
-        OptL.put("part",   "left_arm");
-        OptL.put("device", "remote_controlboard");
-        OptL.put("remote",("/"+robot+"/left_arm").c_str());
-        OptL.put("local", ("/"+name +"/left_arm").c_str());
+        yInfo("Setting up iCubSkin...");
+         for(unsigned int i=0;i<filenames.size();i++)
+        //for(unsigned int i=0;i<1;i++)
+        {
+            string filePath = filenames[i];
+            yInfo("i: %i filePath: %s",i,filePath.c_str());
+            skinPart sP;
+            if ( setTaxelPosesFromFile(filePath,sP) )
+            {
+                iCubSkin.push_back(sP);
+            }
+        }
+        
+        yInfo("Loading from file %s",taxelsFile.c_str());
+        load();
 
-        if (!ddL.open(OptL))
+        yInfo("iCubSkin correctly instantiated. Size: %i",iCubSkin.size());
+        bool rightOK=false;
+        bool leftOK=false;
+
+        for (size_t i = 0; i < iCubSkin.size(); i++)
         {
-            printMessage(0,"ERROR: could not open left_arm PolyDriver!\n");
-            return false;
+            if (verbosity>= 2)
+            {
+                iCubSkin[i].print(verbosity);
+            }
+
+            if (iCubSkin[i].name == "right_hand" || iCubSkin[i].name == "right_forearm")
+            {
+                rightOK=true;
+            }
+            else if (iCubSkin[i].name == "left_hand" || iCubSkin[i].name == "left_forearm")
+            {
+                leftOK=true;
+            }
         }
-        ok = 1;
-        if (ddL.isValid())
+
+    /**************************/
+        if (rightOK)
         {
-            ok = ok && ddL.view(iencsL);
+            Property OptR;
+            OptR.put("robot",  robot.c_str());
+            OptR.put("part",   "right_arm");
+            OptR.put("device", "remote_controlboard");
+            OptR.put("remote",("/"+robot+"/right_arm").c_str());
+            OptR.put("local", ("/"+name +"/right_arm").c_str());
+
+            if (!ddR.open(OptR))
+            {
+                printMessage(0,"ERROR: could not open right_arm PolyDriver!\n");
+                return false;
+            }
+            bool ok = 1;
+            if (ddR.isValid())
+            {
+                ok = ok && ddR.view(iencsR);
+            }
+            if (!ok)
+            {
+                printMessage(0,"\nERROR: Problems acquiring right_arm interfaces!!!!\n");
+                return false;
+            }
+            iencsR->getAxes(&jntsR);
+            encsR = new yarp::sig::Vector(jntsR,0.0);
         }
-        if (!ok)
+
+    /**************************/
+        if (leftOK)
         {
-            printMessage(0,"\nERROR: Problems acquiring left_arm interfaces!!!!\n");
-            return false;
+            Property OptL;
+            OptL.put("robot",  robot.c_str());
+            OptL.put("part",   "left_arm");
+            OptL.put("device", "remote_controlboard");
+            OptL.put("remote",("/"+robot+"/left_arm").c_str());
+            OptL.put("local", ("/"+name +"/left_arm").c_str());
+
+            if (!ddL.open(OptL))
+            {
+                printMessage(0,"ERROR: could not open left_arm PolyDriver!\n");
+                return false;
+            }
+            bool ok = 1;
+            if (ddL.isValid())
+            {
+                ok = ok && ddL.view(iencsL);
+            }
+            if (!ok)
+            {
+                printMessage(0,"\nERROR: Problems acquiring left_arm interfaces!!!!\n");
+                return false;
+            }
+            iencsL->getAxes(&jntsL);
+            encsL = new yarp::sig::Vector(jntsL,0.0);
         }
-        iencsL->getAxes(&jntsL);
-        encsL = new yarp::sig::Vector(jntsL,0.0);
 
     /**************************/
         Property OptT;
@@ -173,7 +218,7 @@ bool vtRFThread::threadInit()
             printMessage(0,"ERROR: could not open torso PolyDriver!\n");
             return false;
         }
-        ok = 1;
+        bool ok = 1;
         if (ddT.isValid())
         {
             ok = ok && ddT.view(iencsT);
@@ -211,43 +256,6 @@ bool vtRFThread::threadInit()
         }
         iencsH->getAxes(&jntsH);
         encsH = new yarp::sig::Vector(jntsH,0.0);
-
-    /**************************/
-        printMessage(1,"Setting up iCubSkin...\n");
-         for(unsigned int i=0;i<filenames.size();i++)
-        //for(unsigned int i=0;i<1;i++)
-        {
-            string filePath = filenames[i];
-            printMessage(1,"i: %i filePath: %s\n",i,filePath.c_str());
-            skinPart sP;
-            if ( setTaxelPosesFromFile(filePath,sP) )
-            {
-                iCubSkin.push_back(sP);
-            }
-        }
-        
-        printMessage(0,"Loading from files..\n");
-        load();
-
-        printMessage(0,"iCubSkin correctly instantiated. Size: %i\n",iCubSkin.size());
-        if (verbosity>= 2)
-        {
-            for (size_t i = 0; i < iCubSkin.size(); i++)
-            {
-                iCubSkin[i].print(verbosity);
-            }
-        }
-
-        // for (size_t i = 0; i < 4; i++)
-        // {
-        //     H.push_back(skinPart());
-        //     H[i].taxel.push_back(Taxel());
-        // }
-
-        // H[0].name =  "H0";
-        // H[1].name =  "HN";
-        // H[2].name = "EEL";
-        // H[3].name = "EER";
 
     return true;
 }
@@ -573,8 +581,10 @@ bool vtRFThread::detectContact(iCub::skinDynLib::skinContactList *_sCL, int &_ID
 
 bool vtRFThread::load()
 {
+    rf->setVerbose(true);
     string fileName=rf->findFile("taxelsFile").c_str();
-    printMessage(0,"File loaded: %s\n", fileName.c_str());
+    rf->setVerbose(false);
+    yInfo("File loaded: %s", fileName.c_str());
     Property data; data.fromConfigFile(fileName.c_str());
     Bottle b; b.read(data);
 
