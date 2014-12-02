@@ -163,7 +163,7 @@ unsigned int factorial(unsigned int n)
 
     void IncomingEvent::print()
     {
-        printf("Pos: %s\t Vel: %s\t Radius %g\t Src %s\n",Pos.toString().c_str(),Vel.toString().c_str(),Radius,Src.c_str());
+        printf("Pos: %s\t Vel: %s\t Radius %g\t Src %s\n",Pos.toString(3,3).c_str(),Vel.toString(3,3).c_str(),Radius,Src.c_str());
     }
 
     string IncomingEvent::toString(int precision) const
@@ -279,26 +279,26 @@ unsigned int factorial(unsigned int n)
     {
         if (verbosity > 4)
             printf("ID %i \tPos %s \tNorm %s \n\tPosHst \n%s\n\n\tNegHst \n%s\n", ID,
-                    Pos.toString().c_str(), Norm.toString().c_str(),
-                    pwe2D.getPosHist().toString().c_str(),
-                    pwe2D.getNegHist().toString().c_str());
+                    Pos.toString(3,3).c_str(), Norm.toString(3,3).c_str(),
+                    pwe2D.getPosHist().toString(3,3).c_str(),
+                    pwe2D.getNegHist().toString(3,3).c_str());
         else 
             printf("ID %i \tPos %s \tNorm %s\n", ID,
-                    Pos.toString().c_str(), Norm.toString().c_str());
+                    Pos.toString(3,3).c_str(), Norm.toString(3,3).c_str());
             // printf("ID %i \tPos %s \tNorm %s \n\tHst %s\n", ID,
-            //         Pos.toString().c_str(), Norm.toString().c_str(),
-            //         pwe.getHist().toString().c_str());
+            //         Pos.toString(3,3).c_str(), Norm.toString(3,3).c_str(),
+            //         pwe.getHist().toString(3,3).c_str());
     }
 
     string Taxel::toString(int precision)
     {
         stringstream res;
-        res << "ID: " << ID << "\tPos: "<< Pos.toString() << "\t Norm: "<< Norm.toString();
+        res << "ID: " << ID << "\tPos: "<< Pos.toString(3,3) << "\t Norm: "<< Norm.toString(3,3);
 
         if (precision)
         {
-            res << "\n Hst:\n"<< pwe2D.getPosHist().toString();
-            res << "\n Hst:\n"<< pwe2D.getNegHist().toString() << endl;
+            res << "\n Hst:\n"<< pwe2D.getPosHist().toString(3,3);
+            res << "\n Hst:\n"<< pwe2D.getNegHist().toString(3,3) << endl;
         }
         return res.str();
     }
@@ -389,8 +389,8 @@ unsigned int factorial(unsigned int n)
         double RFlimit_cyl = binLimit/tan(rfAngle);
 
         // printf("binLimit: %g RFlimit_cyl: %g rfAngle: %g \n", binLimit, RFlimit_cyl, rfAngle);
-        // printf("ie.Pos\t%s\n", ie.Pos.toString().c_str());
-        // printf("Hist:\n%s\n", pwe2D.getHist().toString().c_str());
+        // printf("ie.Pos\t%s\n", ie.Pos.toString(3,3).c_str());
+        // printf("Hist:\n%s\n", pwe2D.getHist().toString(3,3).c_str());
 
         if (ie.Pos(0)*ie.Pos(0)+ie.Pos(1)*ie.Pos(1) < RFlimit*RFlimit )
         {
