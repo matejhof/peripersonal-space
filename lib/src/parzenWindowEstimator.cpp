@@ -276,7 +276,6 @@ double gauss2D(const double x_0, const double y_0,
         }
         else
         {
-            printf("\n");
             return false;
         }
     }

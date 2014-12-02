@@ -163,7 +163,7 @@ unsigned int factorial(unsigned int n)
 
     void IncomingEvent::print()
     {
-        printf("Pos: %s\t Vel: %s\t Radius %g\t Src %s\n",Pos.toString(3,3).c_str(),Vel.toString(3,3).c_str(),Radius,Src.c_str());
+        yInfo("Pos: %s\t Vel: %s\t Radius %g\t Src %s",Pos.toString(3,3).c_str(),Vel.toString(3,3).c_str(),Radius,Src.c_str());
     }
 
     string IncomingEvent::toString(int precision) const
@@ -222,7 +222,7 @@ unsigned int factorial(unsigned int n)
 
     void IncomingEvent4Taxel::print()
     {
-        printf("NRM: %g\t TTC: %g ", NRM*100, TTC);
+        printf("NRM: %g\t TTC: %g \t", NRM*100, TTC);
         IncomingEvent::print();
     }
 
