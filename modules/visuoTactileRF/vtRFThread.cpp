@@ -1174,17 +1174,18 @@ bool vtRFThread::setTaxelPosesFromFile(const string filePath, skinPart &sP)
         {
             // the taxels at the centers of respective triangles [note that i == taxelID == (line in the .txt file +1)]
             // e.g. first triangle of upper arm is at lines 1-12, center at line 4, thus i=2 
-            // if((i==3) || (i==15)  || (i==27)  || (i==39)  || (i==51)  || (i==63)  || (i==75)  || (i==87)  || 
-            //   (i==99) || (i==111) || (i==123) || (i==135) || (i==147) || (i==159) || (i==171) || (i==183) ||
-            //   (i==207)|| (i==255) || (i==291) || (i==303) || (i==315) || (i==339) || (i==351))
+            // if(  (i==3) || (i==15)  ||  (i==27) ||  (i==39) ||  (i==51) ||  (i==63) ||  (i==75) ||  (i==87) ||
+            //     (i==99) || (i==111) || (i==123) || (i==135) || (i==147) || (i==159) || (i==171) || (i==183) ||
+            //    (i==207) || (i==255) || (i==291) || (i==303) || (i==315) || (i==339) || (i==351) )
 
-            // if((i==3) || (i==39)  || (i==207)|| (i==255) || (i==291))
-            // if((i==3) || (i==15)  || (i==27)|| (i==183))    // those are the taxels that are in the big patch but closest to the little patch (internally)
-            // 27 is proximal, 15 next, 3 next, 183 most distal
-            // if((i==135) || (i==147)  || (i==159)|| (i==171))  //this is the second column, farther away from the stitch
-            //  159 is most proximal, 147 is next, 135 next,  171 most distal
-            if((i==87) || (i==75)  || (i==39)|| (i==51)) // those are the taxels that are in the big patch but closest to the little patch (externally)
-            // 87 most proximal, 75 then, 39 then, 51 distal
+            // if(  (i==3) ||  (i==39) || (i==207) || (i==255) || (i==291)) // Taxels that are evenly distributed throughout the forearm
+                                                                         // in order to cover it as much as we can
+            // if(  (i==3) ||  (i==15) ||  (i==27) || (i==183)) // taxels that are in the big patch but closest to the little patch (internally)
+                                                                // 27 is proximal, 15 next, 3 next, 183 most distal
+            // if((i==135) || (i==147) || (i==159) || (i==171))  // this is the second column, farther away from the stitch
+                                                                 // 159 is most proximal, 147 is next, 135 next,  171 most distal
+            if((i==87) || (i==75)  || (i==39)|| (i==51)) // taxels that are in the big patch and closest to the little patch (externally)
+                                                         // 87 most proximal, 75 then, 39 then, 51 distal
             {
                 sP.size++;
                 sP.taxel.push_back(Taxel(taxelPos,taxelNorm,i));
