@@ -454,6 +454,8 @@ void vtRFThread::manageSkinEvents()
     if (isThereAnEvent && taxelsIDs.size()>0)
     {
         Vector geoCenter(3,0.0), normalDir(3,0.0);
+        int w = 0, w_sum = 0;
+
         Bottle b;
         b.clear();
 
@@ -472,14 +474,16 @@ void vtRFThread::manageSkinEvents()
             {
                 if (iCubSkin[iCubSkinID].taxel[j].ID == taxelsIDs[i])
                 {
-                    geoCenter += iCubSkin[iCubSkinID].taxel[j].WRFPos;
-                    normalDir += locateTaxel(iCubSkin[iCubSkinID].taxel[j].Norm,part);
+                    w = iCubSkin[iCubSkinID].taxel[j].Resp;
+                    geoCenter += iCubSkin[iCubSkinID].taxel[j].WRFPos*w;
+                    normalDir += locateTaxel(iCubSkin[iCubSkinID].taxel[j].Norm,part)*w;
+                    w_sum += w;
                 }
             }
         }
 
-        geoCenter /= taxelsIDs.size();
-        normalDir /= taxelsIDs.size();
+        geoCenter /= w_sum;
+        normalDir /= w_sum;
         vectorIntoBottle(geoCenter,b);
         vectorIntoBottle(normalDir,b);
         skinPortOut.write(b);     // send something anyway (if there is no contact the bottle is empty)
