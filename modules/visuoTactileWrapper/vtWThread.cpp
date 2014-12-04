@@ -58,57 +58,57 @@ bool vtWThread::threadInit()
     igaze -> setNeckTrajTime(0.75);
     igaze -> setEyesTrajTime(0.5);
     
-    /**************************/
-        Property OptR;
-        OptR.put("robot",  robot.c_str());
-        OptR.put("part",   "right_arm");
-        OptR.put("device", "remote_controlboard");
-        OptR.put("remote",("/"+robot+"/right_arm").c_str());
-        OptR.put("local", ("/"+name +"/right_arm").c_str());
-
-        if (!ddR.open(OptR))
-        {
-            yError(" could not open right_arm PolyDriver!");
-            return false;
-        }
-        bool ok = 1;
-        if (ddR.isValid())
-        {
-            ok = ok && ddR.view(iencsR);
-        }
-        if (!ok)
-        {
-            yError(" Problems acquiring right_arm interfaces!!!!");
-            return false;
-        }
-        iencsR->getAxes(&jntsR);
-        encsR = new yarp::sig::Vector(jntsR,0.0);
-
     // /**************************/
-    //     Property OptL;
-    //     OptL.put("robot",  robot.c_str());
-    //     OptL.put("part",   "left_arm");
-    //     OptL.put("device", "remote_controlboard");
-    //     OptL.put("remote",("/"+robot+"/left_arm").c_str());
-    //     OptL.put("local", ("/"+name +"/left_arm").c_str());
+    //     Property OptR;
+    //     OptR.put("robot",  robot.c_str());
+    //     OptR.put("part",   "right_arm");
+    //     OptR.put("device", "remote_controlboard");
+    //     OptR.put("remote",("/"+robot+"/right_arm").c_str());
+    //     OptR.put("local", ("/"+name +"/right_arm").c_str());
 
-    //     if (!ddL.open(OptL))
+    //     if (!ddR.open(OptR))
     //     {
-    //         yError(" could not open left_arm PolyDriver!");
+    //         yError(" could not open right_arm PolyDriver!");
     //         return false;
     //     }
-    //     ok = 1;
-    //     if (ddL.isValid())
+    //     bool ok = 1;
+    //     if (ddR.isValid())
     //     {
-    //         ok = ok && ddL.view(iencsL);
+    //         ok = ok && ddR.view(iencsR);
     //     }
     //     if (!ok)
     //     {
-    //         yError(" Problems acquiring left_arm interfaces!!!!");
+    //         yError(" Problems acquiring right_arm interfaces!!!!");
     //         return false;
     //     }
-    //     iencsL->getAxes(&jntsL);
-    //     encsL = new yarp::sig::Vector(jntsL,0.0);
+    //     iencsR->getAxes(&jntsR);
+    //     encsR = new yarp::sig::Vector(jntsR,0.0);
+
+    /**************************/
+        Property OptL;
+        OptL.put("robot",  robot.c_str());
+        OptL.put("part",   "left_arm");
+        OptL.put("device", "remote_controlboard");
+        OptL.put("remote",("/"+robot+"/left_arm").c_str());
+        OptL.put("local", ("/"+name +"/left_arm").c_str());
+
+        if (!ddL.open(OptL))
+        {
+            yError(" could not open left_arm PolyDriver!");
+            return false;
+        }
+        bool ok = 1;
+        if (ddL.isValid())
+        {
+            ok = ok && ddL.view(iencsL);
+        }
+        if (!ok)
+        {
+            yError(" Problems acquiring left_arm interfaces!!!!");
+            return false;
+        }
+        iencsL->getAxes(&jntsL);
+        encsL = new yarp::sig::Vector(jntsL,0.0);
 
     linEst_optFlow     = new AWLinEstimator(16,0.05);
     linEst_pf3dTracker = new AWLinEstimator(16,0.05);
@@ -289,9 +289,9 @@ void vtWThread::run()
         }
         eventsPort.write();
     }
-    else if (yarp::os::Time::now() - timeNow > 2.0)
+    else if (yarp::os::Time::now() - timeNow > 1.0)
     {
-        yInfo("No significant event in the last 2 seconds. Resetting the velocity estimators..");
+        yInfo("No significant event in the last 1 seconds. Resetting the velocity estimators..");
         timeNow = yarp::os::Time::now();
 
         linEst_optFlow     -> reset();
