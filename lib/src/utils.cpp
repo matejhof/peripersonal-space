@@ -222,7 +222,7 @@ unsigned int factorial(unsigned int n)
 
     void IncomingEvent4Taxel::print()
     {
-        printf("NRM: %g\t TTC: %g \t", NRM*100, TTC);
+        yInfo("NRM: %g\t TTC: %g \t", NRM, TTC);
         IncomingEvent::print();
     }
 

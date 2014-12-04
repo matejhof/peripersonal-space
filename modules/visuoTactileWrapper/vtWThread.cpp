@@ -288,6 +288,7 @@ void vtWThread::run()
             eventsBottle.addList()= events[i].toBottle();
         }
         eventsPort.write();
+        timeNow = yarp::os::Time::now();
     }
     else if (yarp::os::Time::now() - timeNow > 1.0)
     {

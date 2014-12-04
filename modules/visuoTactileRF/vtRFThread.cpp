@@ -619,7 +619,10 @@ bool vtRFThread::load()
             for (size_t j = 0; j < size; j++)
             {
                 mapp.push_back(bbb->get(j).asInt());
-                printMessage(6,"%i ",mapp[j]);
+                if (verbosity>=6)
+                {
+                    printf("%i ",mapp[j]);
+                }
             }
             printMessage(6,"\n");
 
@@ -631,6 +634,7 @@ bool vtRFThread::load()
                 bbb = bb.get(j+7).asList();
                 iCubSkin[i].taxel[j].ID = bbb->get(0).asInt();
                 iCubSkin[i].taxel[j].pwe2D.resize(extX,extY,hSiz);
+                
                 iCubSkin[i].taxel[j].pwe2D.setPosHist(matrixFromBottle(*bbb->get(1).asList(),0,hSiz[0],hSiz[1]));
                 iCubSkin[i].taxel[j].pwe2D.setNegHist(matrixFromBottle(*bbb->get(2).asList(),0,hSiz[0],hSiz[1]));
             }
@@ -1176,8 +1180,11 @@ bool vtRFThread::setTaxelPosesFromFile(const string filePath, skinPart &sP)
                                                                 // 27 is proximal, 15 next, 3 next, 183 most distal
             // if((i==135) || (i==147) || (i==159) || (i==171))  // this is the second column, farther away from the stitch
                                                                  // 159 is most proximal, 147 is next, 135 next,  171 most distal
-            if((i==87) || (i==75)  || (i==39)|| (i==51)) // taxels that are in the big patch and closest to the little patch (externally)
-                                                         // 87 most proximal, 75 then, 39 then, 51 distal
+            // if((i==87) || (i==75)  || (i==39)|| (i==51)) // taxels that are in the big patch and closest to the little patch (externally)
+            //                                              // 87 most proximal, 75 then, 39 then, 51 distal
+
+            if((i==27) || (i==15) || (i==3) || (i==183) ||              // taxels used for the experimentations on the pps paper
+               (i==147) || (i==135) || (i==75) || (i==39) || (i==51))
             {
                 sP.size++;
                 sP.taxel.push_back(Taxel(taxelPos,taxelNorm,i));
