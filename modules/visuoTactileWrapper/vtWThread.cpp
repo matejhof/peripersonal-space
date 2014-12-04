@@ -291,7 +291,7 @@ void vtWThread::run()
     }
     else if (yarp::os::Time::now() - timeNow > 1.0)
     {
-        yInfo("No significant event in the last 1 seconds. Resetting the velocity estimators..");
+        yDebug("No significant event in the last second. Resetting the velocity estimators..");
         timeNow = yarp::os::Time::now();
 
         linEst_optFlow     -> reset();
