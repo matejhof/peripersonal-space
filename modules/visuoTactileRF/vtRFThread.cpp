@@ -108,6 +108,8 @@ bool vtRFThread::threadInit()
            
         Network::connect("/skinManager/skin_events:o",("/"+name+"/skin_events:i").c_str());
 
+        ts.update();
+
 
     /**************************/
         yInfo("Setting up iCubSkin...");
@@ -262,6 +264,7 @@ bool vtRFThread::threadInit()
 
 void vtRFThread::run()
 {
+    ts.update();
     incomingEvents.clear();
 
     // read from the input ports
@@ -414,6 +417,7 @@ void vtRFThread::run()
         bd.clear();
         
         vectorIntoBottle(dumpedVector,bd);
+        dataDumperPortOut.setEnvelope(ts);
         dataDumperPortOut.write(bd);
     }
 }
@@ -486,6 +490,7 @@ void vtRFThread::manageSkinEvents()
         normalDir /= w_sum;
         vectorIntoBottle(geoCenter,b);
         vectorIntoBottle(normalDir,b);
+        skinPortOut.setEnvelope(ts);
         skinPortOut.write(b);     // send something anyway (if there is no contact the bottle is empty)
     }
 }
@@ -531,18 +536,22 @@ void vtRFThread::sendContactsToSkinGui()
         
         if(iCubSkin[i].name == "left_forearm")
         {
-           skinGuiPortForearmL.write(respToSkin); 
+            skinGuiPortForearmL.setEnvelope(ts);
+            skinGuiPortForearmL.write(respToSkin); 
         }
         else if(iCubSkin[i].name == "right_forearm")
         {
-           skinGuiPortForearmR.write(respToSkin); 
+            skinGuiPortForearmR.setEnvelope(ts);
+            skinGuiPortForearmR.write(respToSkin); 
         }
         else if(iCubSkin[i].name == "left_hand")
         {
+            skinGuiPortHandL.setEnvelope(ts);
             skinGuiPortHandL.write(respToSkin); 
         }
         else if(iCubSkin[i].name == "right_hand")
         {
+            skinGuiPortHandR.setEnvelope(ts);
             skinGuiPortHandR.write(respToSkin); 
         }
     }
@@ -954,6 +963,7 @@ void vtRFThread::drawTaxels(string _eye)
         }
     }
 
+    _eye=="rightEye"?imagePortOutR.setEnvelope(ts):imagePortOutL.setEnvelope(ts);
     _eye=="rightEye"?imagePortOutR.write(imgOut):imagePortOutL.write(imgOut);
 }
 

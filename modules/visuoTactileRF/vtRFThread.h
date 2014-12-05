@@ -167,6 +167,9 @@ protected:
     IGazeControl       *igaze;
     int contextGaze;
 
+    // Stamp for the setEnvelope for the ports
+    yarp::os::Stamp ts;
+
     /**
     * Locates a taxel in the World Reference Frame, given its
     * position w.r.t. the arm
