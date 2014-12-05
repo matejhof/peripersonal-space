@@ -300,7 +300,7 @@ void vtRFThread::run()
         for (size_t j = 0; j < iCubSkin[i].taxel.size(); j++)
         {
             iCubSkin[i].taxel[j].WRFPos=locateTaxel(iCubSkin[i].taxel[j].Pos,iCubSkin[i].name);
-            printMessage(5,"iCubSkin[%i].taxel[%i].WRFPos %s\n",i,j,iCubSkin[i].taxel[j].WRFPos.toString().c_str());
+            printMessage(6,"iCubSkin[%i].taxel[%i].WRFPos %s\n",i,j,iCubSkin[i].taxel[j].WRFPos.toString().c_str());
         }
     }
     // H[2].taxel[0].WRFPos=locateTaxel(H[2].taxel[0].Pos,"left_hand");
@@ -438,7 +438,7 @@ void vtRFThread::manageSkinEvents()
             {
                 for (size_t j = 0; j < iCubSkin[i].taxel.size(); j++) // cycle through the taxels
                 {
-                    if (iCubSkin[i].taxel[j].Resp > 150)
+                    if (iCubSkin[i].taxel[j].Resp > 100)
                     {
                         taxelsIDs.push_back(iCubSkin[i].taxel[j].ID);
                         isThereAnEvent = true;
@@ -510,7 +510,7 @@ void vtRFThread::sendContactsToSkinGui()
                 if(iCubSkin[i].Repr2TaxelList.empty())
                 {  
                 	//we simply light up the taxels themselves
-                    respToSkin[iCubSkin[i].taxel[j].ID] = iCubSkin[i].taxel[j].Resp*100/255;
+                    respToSkin[iCubSkin[i].taxel[j].ID] = iCubSkin[i].taxel[j].Resp;
                 }
                 else
                 { 
@@ -520,14 +520,14 @@ void vtRFThread::sendContactsToSkinGui()
                     if (l.empty())
                     {
                         yWarning("skinPart %d Taxel %d : no list of represented taxels is available, even if Repr2TaxelList is not empty",i,iCubSkin[i].taxel[j].ID);
-                        respToSkin[iCubSkin[i].taxel[j].ID] = iCubSkin[i].taxel[j].Resp*100/255;
+                        respToSkin[iCubSkin[i].taxel[j].ID] = iCubSkin[i].taxel[j].Resp;
                     }
                     else
                     {
                         for(list<unsigned int>::const_iterator iter_list = l.begin(); iter_list != l.end(); iter_list++)
                         {
                         	//for all the represented taxels, we assign the activation of the super-taxel
-                            respToSkin[*iter_list] =  iCubSkin[i].taxel[j].Resp*100/255;
+                            respToSkin[*iter_list] =  iCubSkin[i].taxel[j].Resp;
                         } 
                     }
                 }
@@ -1224,7 +1224,7 @@ bool vtRFThread::setTaxelPosesFromFile(const string filePath, skinPart &sP)
         else if (sP.name == "right_hand")
         { //right hand has different taxel nr.s than left hand 
             // if((i==101) || (i==103) || (i==118) || (i==137)) // || (i==124)) remove one taxel
-            if((i==101) || (i==103) || (i==118) || (i==137) || (i==124))
+            if((i==101) || (i==103) || (i==118) || (i==137)) // || (i==124)) remove one taxel
             {
                 sP.size++;
                 sP.taxel.push_back(Taxel(taxelPos,taxelNorm,i));
