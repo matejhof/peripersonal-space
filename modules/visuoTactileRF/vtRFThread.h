@@ -235,7 +235,7 @@ protected:
     * If it is defined for the respective skin part, it fills the taxelIDtoRepresentativeTaxelID vector that is indexed by taxel IDs
     * and returns taxel IDs of their representatives - e.g. triangle centers.
     **/
-    void initRepresentativeTaxels(skinPart2D &sP);
+    void initRepresentativeTaxels(skinPart &sP);
    
     
     /**
@@ -259,7 +259,8 @@ protected:
     void manageSkinEvents();
 
     /**
-    *
+    * For all the skinParts, process the response according to the inputEvent and parse them properly before sending them to the 
+    * skinGuis
     **/
     void sendContactsToSkinGui();
 
@@ -283,7 +284,8 @@ protected:
     /**
     *
     **/
-    IncomingEvent4Taxel2D projectIntoTaxelRF(const Matrix &RF,const Matrix &T_a,const IncomingEvent &e);
+    IncomingEvent4Taxel1D projectIntoTaxelRF1D(const Matrix &RF,const Matrix &T_a,const IncomingEvent &e);
+    IncomingEvent4Taxel2D projectIntoTaxelRF2D(const Matrix &RF,const Matrix &T_a,const IncomingEvent &e);
 
     /**
     *
@@ -293,6 +295,7 @@ protected:
     /**
     * Compute the NRM and TTC for a specific event
     **/
+    bool computeX(IncomingEvent4Taxel1D &ie);
     bool computeX(IncomingEvent4Taxel2D &ie);
 
     /**
